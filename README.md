@@ -4,7 +4,9 @@
 
 Open it cold, pick a card, and press, drag, or let go. The label under each card names the cognitive skill it exercises.
 
-**Live:** https://03-play-toy.vercel.app
+**Live:** https://03-play-toy.vercel.app  ·  **Source:** github.com/aaryaa8/play-studies (private)
+
+Redeploy after changes with `npx vercel@latest deploy --prod --yes` from this folder. Media for the portfolio page lives at stable URLs like `https://03-play-toy.vercel.app/assets/gifs/turn.mp4`, and `assets/embed-snippet.html` is a ready-to-paste WordPress block that uses them.
 
 ---
 
@@ -48,7 +50,7 @@ Sound plays in several toys and starts on your first click, so browsers allow it
 
 ## Design notes
 
-- **Type.** The whole game runs on Nunito, a rounded humanist sans chosen from calm-typography research. Rounded letterforms read as warm and safe (the curvature effect), and Nunito keeps that quality while staying readable and shipping true italics for the accent words.
+- **Type.** The whole game runs on Nunito, a rounded humanist sans chosen from calm-typography research. Rounded letterforms read as warm and safe (the curvature effect), and Nunito keeps that quality while staying readable and shipping true italics for the accent words. The font is self-hosted in `assets/fonts/`, so the page makes no external requests and works offline.
 - **One visual language.** Warm-ink background, one accent tint per family (coral for Hold, iris for Draw, jade for Let go, rose for Look), a subtle skill label on every card and every toy.
 - **One dial, everywhere.** Each toy carries a single quiet control that shifts one variable of its skill (wait length, stillness tolerance, gravity, and so on), so every toy reads as a small system you can retune. A global sound toggle sits in the top bar.
 - **Motion is the product.** Time-based growth in the Hold family stays frame-rate independent. Physics in the Let go family uses softened gravity and light damping so play settles rather than flies apart.
