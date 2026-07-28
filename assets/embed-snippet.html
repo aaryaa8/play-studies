@@ -1,0 +1,62 @@
+<!-- ============================================================
+     Play Studies - toy previews for the portfolio page.
+     Paste into a WordPress "Custom HTML" block.
+     Silent, looping MP4s hosted on Vercel. Poster images, lazy playback
+     (only plays when scrolled into view), and respects reduced motion.
+     Live interactive version: https://03-play-toy.vercel.app
+     ============================================================ -->
+<style>
+  .ps-toys { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; max-width:920px; margin:0 auto; }
+  @media (max-width:640px){ .ps-toys{ grid-template-columns:1fr; } }
+  .ps-toy { margin:0; }
+  .ps-toy video { width:100%; height:auto; display:block; border-radius:16px; background:#17110e; }
+  .ps-toy figcaption { margin-top:10px; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#8a8378; }
+  .ps-toy figcaption b { color:#3a2f27; font-weight:700; }
+  .ps-live { text-align:center; margin:22px 0 0; font-size:14px; }
+  .ps-live a { color:#ff6a4d; text-decoration:none; border-bottom:1px solid rgba(255,106,77,.4); padding-bottom:2px; }
+</style>
+
+<div class="ps-toys">
+  <figure class="ps-toy">
+    <video poster="https://03-play-toy.vercel.app/assets/gifs/bloom-poster.jpg" data-src="https://03-play-toy.vercel.app/assets/gifs/bloom.mp4" muted loop playsinline preload="none"></video>
+    <figcaption><b>Patience</b> &middot; impulse control</figcaption>
+  </figure>
+  <figure class="ps-toy">
+    <video poster="https://03-play-toy.vercel.app/assets/gifs/echo-poster.jpg" data-src="https://03-play-toy.vercel.app/assets/gifs/echo.mp4" muted loop playsinline preload="none"></video>
+    <figcaption><b>Melody</b> &middot; cross-sensory mapping</figcaption>
+  </figure>
+  <figure class="ps-toy">
+    <video poster="https://03-play-toy.vercel.app/assets/gifs/turn-poster.jpg" data-src="https://03-play-toy.vercel.app/assets/gifs/turn.mp4" muted loop playsinline preload="none"></video>
+    <figcaption><b>Turn</b> &middot; mental rotation</figcaption>
+  </figure>
+  <figure class="ps-toy">
+    <video poster="https://03-play-toy.vercel.app/assets/gifs/fog-poster.jpg" data-src="https://03-play-toy.vercel.app/assets/gifs/fog.mp4" muted loop playsinline preload="none"></video>
+    <figcaption><b>Fog</b> &middot; visual search</figcaption>
+  </figure>
+</div>
+<p class="ps-live">These are silent loops. <a href="https://03-play-toy.vercel.app" target="_blank" rel="noopener">Play the twelve toys live &rarr;</a></p>
+
+<script>
+(function () {
+  var vids = Array.prototype.slice.call(document.querySelectorAll(".ps-toys video"));
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) {
+    // Do not autoplay motion. Show the poster and let the visitor choose.
+    vids.forEach(function (v) { v.src = v.dataset.src; v.setAttribute("controls", ""); });
+    return;
+  }
+  function load(v) { if (!v.src) v.src = v.dataset.src; }
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) { load(v); v.play().catch(function () {}); }
+        else { v.pause(); }
+      });
+    }, { threshold: 0.25 });
+    vids.forEach(function (v) { io.observe(v); });
+  } else {
+    vids.forEach(function (v) { load(v); v.play().catch(function () {}); });
+  }
+})();
+</script>

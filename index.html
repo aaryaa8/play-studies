@@ -1,0 +1,2195 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Play Studies · twelve cognitive toys by aaryaa</title>
+<meta name="description" content="Twelve tiny browser toys in four families, each turning one gesture into a small workout for a specific cognitive skill. A play-based-learning study by aaryaa." />
+
+<!-- Self-hosted Nunito: no external requests, works offline, loads fast. -->
+<link rel="stylesheet" href="assets/fonts/nunito.css" />
+
+<style>
+  :root {
+    --ink:      #17110e;
+    --ink-2:    #211712;
+    --cream:    #f3e9da;
+    --muted:    rgba(243, 233, 218, .58);
+    --faint:    rgba(243, 233, 218, .16);
+
+    --coral:    #ff6a4d;
+    --amber:    #ffb43d;
+    --jade:     #59d6b0;
+    --iris:     #8e86ff;
+    --rose:     #ff7fb2;
+
+    /* One calming, rounded humanist family across the whole game (curvature = warmth/safety).
+       Both variables map to Nunito so every existing rule stays valid. */
+    --display: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+    --edge: clamp(18px, 4vw, 48px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--mono);
+    color: var(--cream);
+    background:
+      radial-gradient(120% 90% at 18% 8%, #2a1c14 0%, rgba(42,28,20,0) 55%),
+      radial-gradient(130% 100% at 88% 96%, #241a2a 0%, rgba(36,26,42,0) 52%),
+      var(--ink);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    height: 100dvh;
+  }
+
+  /* Film grain */
+  .grain {
+    position: fixed; inset: 0; z-index: 60; pointer-events: none;
+    opacity: .5; mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    display: flex; align-items: center; gap: 18px;
+    padding: 18px var(--edge);
+    pointer-events: none;
+  }
+  .topbar > * { pointer-events: auto; }
+
+  .wordmark {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 21px;
+    letter-spacing: .005em;
+  }
+  .wordmark .dot { color: var(--coral); }
+
+  .context {
+    margin-left: auto;
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .mute {
+    display: inline-flex; align-items: center; gap: 7px; margin-left: 14px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted);
+    background: rgba(243,233,218,.06); border: 1px solid var(--faint);
+    border-radius: 100px; padding: 7px 12px 7px 10px; cursor: pointer;
+    transition: background .25s ease, color .25s ease;
+  }
+  .mute:hover { background: rgba(243,233,218,.13); color: var(--cream); }
+  .mute:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+  .mute svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mute .spk { fill: currentColor; stroke: none; }
+  .mute .slash { opacity: 0; }
+  .mute[data-muted="true"] .wave, .mute[data-muted="true"] .wave2 { opacity: 0; }
+  .mute[data-muted="true"] .slash { opacity: 1; }
+  @media (max-width: 560px) { .mute .mute-label { display: none; } .mute { padding: 7px 9px; } }
+
+  .back {
+    font-family: var(--mono);
+    font-size: 12px; letter-spacing: .06em;
+    color: var(--cream);
+    background: rgba(243,233,218,.06);
+    border: 1px solid var(--faint);
+    border-radius: 100px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: background .25s ease, transform .25s ease, opacity .3s ease;
+    opacity: 0; transform: translateX(-6px); pointer-events: none;
+  }
+  .back:hover { background: rgba(243,233,218,.13); }
+  body:not([data-view="hub"]) .back { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* ---------- Views ---------- */
+  .view { position: fixed; inset: 0; display: none; }
+  .view.active { display: block; }
+
+  /* ---------- Hub ---------- */
+  #view-hub {
+    display: none;
+    overflow-y: auto;
+    padding: clamp(96px, 14vh, 150px) var(--edge) 64px;
+  }
+  #view-hub.active { display: block; }
+
+  .onramp {
+    max-width: 760px;
+    font-size: clamp(13px, 1.5vw, 15px);
+    line-height: 1.65;
+    color: var(--muted);
+    margin-bottom: clamp(26px, 5vh, 52px);
+  }
+  .onramp b { color: var(--cream); font-weight: 500; }
+
+  .hero-title {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(46px, 10.5vw, 126px);
+    line-height: .98;
+    letter-spacing: -.03em;
+    margin-bottom: clamp(30px, 6vh, 60px);
+    max-width: 13ch;
+  }
+  .hero-title em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--coral);
+  }
+
+  /* ---------- Hub families ---------- */
+  .families { max-width: 1180px; }
+  .family { margin: 0 0 clamp(26px, 4.2vh, 46px); }
+  .family-head { display: flex; align-items: center; gap: 16px; margin: 0 2px 15px; }
+  .family-head .fam-verb {
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(18px, 2.2vw, 25px); color: var(--accent); letter-spacing: -.01em;
+  }
+  .family-head .fam-desc { font-size: 12.5px; color: var(--muted); letter-spacing: .01em; }
+  .family-head .fam-line { flex: 1; height: 1px; background: var(--faint); }
+  .family[data-fam="hold"]  { --accent: var(--coral); }
+  .family[data-fam="draw"]  { --accent: var(--iris);  }
+  .family[data-fam="letgo"] { --accent: var(--jade);  }
+  .family[data-fam="look"]  { --accent: var(--rose);  }
+  @media (max-width: 640px) { .family-head .fam-desc { display: none; } }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(12px, 1.4vw, 20px);
+  }
+  @media (max-width: 820px) { .cards { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .cards { grid-template-columns: 1fr; } }
+
+  .card {
+    position: relative;
+    display: flex; flex-direction: column;
+    min-height: 264px;
+    padding: 22px 22px 20px;
+    border: 1px solid var(--faint);
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgba(243,233,218,.05), rgba(243,233,218,.01));
+    cursor: pointer;
+    overflow: hidden;
+    text-align: left;
+    color: inherit; font-family: inherit;
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), border-color .4s ease, background .4s ease;
+  }
+  .card:hover { transform: translateY(-6px); border-color: rgba(243,233,218,.34); }
+  .card:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+  .card .num { font-size: 11px; letter-spacing: .24em; color: var(--muted); transition: color .4s ease; }
+  .card .verb {
+    margin-top: 3px;
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(23px, 2.5vw, 31px); line-height: 1; letter-spacing: -.01em;
+  }
+  .card .q {
+    margin-top: 11px; font-size: 13.5px; line-height: 1.5; color: var(--cream); max-width: 30ch;
+  }
+  .card .principle {
+    margin-top: auto; padding-top: 16px;
+    font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  }
+  .card .preview { position: absolute; inset: auto 0 64px 0; height: 74px; pointer-events: none; color: var(--accent); }
+  .card .go {
+    position: absolute; top: 20px; right: 20px;
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--faint); display: grid; place-items: center; font-size: 12px;
+    transition: transform .4s ease, background .4s ease, color .4s ease;
+  }
+  .card:hover .go { transform: rotate(-45deg); background: var(--accent); color: var(--ink); border-color: transparent; }
+  .card .verb, .card:hover .num { color: var(--accent); }
+
+  /* ---------- card previews (CSS + SVG, tinted by family --accent via currentColor) ---------- */
+  .pv-dot {
+    position: absolute; left: 50%; bottom: 6px; width: 11px; height: 11px;
+    border-radius: 50%; background: currentColor; color: var(--coral);
+    transform: translateX(-50%); box-shadow: 0 0 24px 6px currentColor;
+    animation: pvpulse 2.6s ease-in-out infinite;
+  }
+  @keyframes pvpulse {
+    0%,100% { transform: translate(-50%,0) scale(.55); opacity: .5; }
+    55% { transform: translate(-50%,-28px) scale(1.15); opacity: 1; }
+  }
+  .pv-wave { position: absolute; inset: 0; }
+  .pv-wave path { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 7px currentColor); }
+  .pv-wave .head { stroke: var(--amber); animation: pvsweep 3.4s linear infinite; }
+  @keyframes pvsweep { from { transform: translateX(0); } to { transform: translateX(100%); } }
+
+  .pv-orbit { position: absolute; inset: 0; }
+  .pv-orbit span {
+    position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px;
+    border-radius: 50%; background: currentColor; box-shadow: 0 0 13px 3px currentColor;
+  }
+  .pv-orbit span:nth-child(1) { animation: orb 3.8s linear infinite; }
+  .pv-orbit span:nth-child(2) { animation: orb 5.4s linear infinite reverse; opacity: .8; }
+  .pv-orbit span:nth-child(3) { animation: orb 2.9s linear infinite; opacity: .6; }
+  @keyframes orb {
+    from { transform: rotate(0deg) translateX(30px) rotate(0deg); }
+    to   { transform: rotate(360deg) translateX(30px) rotate(-360deg); }
+  }
+
+  /* steady: concentric calm rings */
+  .pv-ring { position: absolute; inset: 0; }
+  .pv-ring i {
+    position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px;
+    border-radius: 50%; border: 1.5px solid currentColor; opacity: 0;
+    animation: pvring 3.2s ease-out infinite;
+  }
+  .pv-ring i:nth-child(2) { animation-delay: 1.06s; }
+  .pv-ring i:nth-child(3) { animation-delay: 2.12s; }
+  @keyframes pvring { 0% { transform: scale(.5); opacity: .8; } 100% { transform: scale(3); opacity: 0; } }
+
+  /* sequence dots: count + recall */
+  .pv-seq { position: absolute; inset: 0; }
+  .pv-seq i {
+    position: absolute; top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%;
+    background: currentColor; box-shadow: 0 0 12px 2px currentColor; opacity: .25;
+    animation: pvseq 2.8s ease-in-out infinite;
+  }
+  .pv-seq i:nth-child(1) { left: 30%; animation-delay: 0s; }
+  .pv-seq i:nth-child(2) { left: 50%; animation-delay: .35s; }
+  .pv-seq i:nth-child(3) { left: 70%; animation-delay: .7s; }
+  @keyframes pvseq { 0%,55%,100% { opacity: .22; transform: scale(.8); } 18% { opacity: 1; transform: scale(1.25); } }
+
+  /* svg glyph previews */
+  .pv-svg { position: absolute; inset: 0; }
+  .pv-svg .solid { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 6px currentColor); }
+  .pv-svg .ghost { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 6; opacity: .55; }
+  .pv-svg .mark { fill: none; stroke: currentColor; stroke-width: 2; opacity: .8; }
+  .pv-svg .seed { fill: currentColor; filter: drop-shadow(0 0 6px currentColor); }
+
+  .credit {
+    margin-top: clamp(34px, 7vh, 66px);
+    font-size: 11px; letter-spacing: .12em; color: var(--muted);
+    max-width: 760px; line-height: 1.7;
+  }
+  .credit a { color: var(--cream); text-decoration: none; border-bottom: 1px solid var(--faint); }
+
+  /* staggered reveal */
+  .reveal { opacity: 0; transform: translateY(16px); animation: rise .9s cubic-bezier(.2,.8,.2,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  /* ---------- Toy stage ---------- */
+  .toy { display: none; }
+  .toy.active { display: block; }
+  .stage { position: absolute; inset: 0; }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  .toy-head {
+    position: absolute; left: var(--edge); top: clamp(74px, 12vh, 108px);
+    z-index: 6; pointer-events: none; max-width: min(90vw, 620px);
+  }
+  .toy-head .q {
+    font-family: var(--display);
+    font-weight: 300;
+    font-size: clamp(30px, 5.6vw, 62px);
+    line-height: 1.05; letter-spacing: -.02em;
+  }
+  .toy-head .q em { font-style: italic; font-weight: 600; color: var(--tint); }
+  .toy-head .principle {
+    margin-top: 12px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* per-toy dial: one quiet control, same component everywhere */
+  .dial { display: inline-flex; align-items: center; gap: 11px; margin-top: 18px; pointer-events: auto; flex-wrap: wrap; }
+  .dial-label { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .dial-track { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--faint); border-radius: 100px; background: rgba(243,233,218,.04); }
+  .dial-seg {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .02em; color: var(--muted);
+    background: transparent; border: none; border-radius: 100px; padding: 5px 12px; cursor: pointer;
+    transition: background .2s ease, color .2s ease;
+  }
+  .dial-seg:hover { color: var(--cream); }
+  .dial-seg:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .dial-seg[aria-pressed="true"] { background: var(--tint); color: var(--ink); }
+
+  .toy-hud {
+    position: absolute; left: var(--edge); right: var(--edge); bottom: clamp(20px, 5vh, 40px);
+    z-index: 6;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+    pointer-events: none;
+  }
+  .hint {
+    font-size: 12px; letter-spacing: .04em; color: var(--muted);
+    max-width: 42ch; line-height: 1.5;
+    transition: opacity .5s ease;
+  }
+  .hint .k { color: var(--tint); }
+  .counter {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(15px, 2vw, 20px);
+    color: var(--cream);
+    white-space: nowrap;
+  }
+  .counter small { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .1em; }
+  .tools { display: flex; gap: 10px; pointer-events: auto; }
+  .tool {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .05em;
+    color: var(--cream);
+    background: rgba(243,233,218,.06);
+    border: 1px solid var(--faint);
+    border-radius: 100px; padding: 8px 14px; cursor: pointer;
+    transition: background .25s ease;
+  }
+  .tool:hover { background: rgba(243,233,218,.14); }
+
+  #view-bloom, #view-steady, #view-count { --tint: var(--coral); }
+  #view-echo,  #view-recall, #view-continue { --tint: var(--iris);  }
+  #view-garden, #view-aim,   #view-tinker { --tint: var(--jade);  }
+  #view-follow, #view-fog,   #view-turn   { --tint: var(--rose);  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .pv-dot, .pv-wave .head, .pv-orbit span { animation: none; opacity: 1; transform: none; }
+  }
+</style>
+
+<div class="grain"></div>
+
+<header class="topbar">
+  <button class="back" id="backBtn">&larr; all toys</button>
+  <div class="wordmark">aaryaa<span class="dot">.</span></div>
+  <div class="context" id="context">play studies</div>
+  <button class="mute" id="muteBtn" aria-label="Mute sound" aria-pressed="false" data-muted="false">
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">
+      <path class="spk" d="M4 9.5v5h3.5L12 18V6L7.5 9.5H4z" />
+      <path class="wave" d="M15.2 9.2a4 4 0 0 1 0 5.6" />
+      <path class="wave2" d="M17.6 6.8a7.5 7.5 0 0 1 0 10.4" />
+      <line class="slash" x1="3.5" y1="3.5" x2="20.5" y2="20.5" />
+    </svg>
+    <span class="mute-label">sound</span>
+  </button>
+</header>
+
+<main>
+  <!-- ================= HUB ================= -->
+  <section id="view-hub" class="view active">
+    <p class="onramp reveal" style="animation-delay:.05s">
+      <b>Twelve tiny browser toys, in four families.</b> Each turns one gesture into a small workout
+      for a specific cognitive skill, from attention to prediction to mental rotation. Made by aaryaa
+      as a play-based-learning study. The label under each card names the skill it exercises.
+      Pick one and press, drag, or let go.
+    </p>
+
+    <h1 class="hero-title reveal" style="animation-delay:.12s">
+      Some skills<br />are better <em>played</em><br />than taught.
+    </h1>
+
+    <div class="families">
+      <!-- Family: HOLD -->
+      <section class="family reveal" data-fam="hold" style="animation-delay:.2s">
+        <div class="family-head">
+          <span class="fam-verb">Hold</span>
+          <span class="fam-desc">Press and hold. Attention kept in one place, over time.</span>
+          <span class="fam-line"></span>
+        </div>
+        <div class="cards">
+          <button class="card" data-toy="bloom">
+            <span class="num">01</span><span class="verb">Patience</span><span class="go">&rarr;</span>
+            <span class="q">Grow a bloom you cannot rush. The reward arrives only if you wait it out.</span>
+            <span class="preview"><span class="pv-dot"></span></span>
+            <span class="principle">Impulse control</span>
+          </button>
+          <button class="card" data-toy="steady">
+            <span class="num">02</span><span class="verb">Steady</span><span class="go">&rarr;</span>
+            <span class="q">Keep a light lit by staying still. A restless hand lets it fade.</span>
+            <span class="preview"><span class="pv-ring"><i></i><i></i><i></i></span></span>
+            <span class="principle">Sustained attention</span>
+          </button>
+          <button class="card" data-toy="count">
+            <span class="num">03</span><span class="verb">Count</span><span class="go">&rarr;</span>
+            <span class="q">Hold for the target length with no clock to help, then see how close you land.</span>
+            <span class="preview"><span class="pv-seq"><i></i><i></i><i></i></span></span>
+            <span class="principle">Time perception</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Family: DRAW -->
+      <section class="family reveal" data-fam="draw" style="animation-delay:.3s">
+        <div class="family-head">
+          <span class="fam-verb">Draw</span>
+          <span class="fam-desc">Drag a line. A gesture you can see and hear at once.</span>
+          <span class="fam-line"></span>
+        </div>
+        <div class="cards">
+          <button class="card" data-toy="echo">
+            <span class="num">04</span><span class="verb">Melody</span><span class="go">&rarr;</span>
+            <span class="q">Trace a line and hear the shape loop back. Height is pitch, width is time.</span>
+            <span class="preview">
+              <svg class="pv-wave" viewBox="0 0 200 74" preserveAspectRatio="none">
+                <path d="M8 52 C 38 14, 66 62, 96 30 S 158 24, 192 46" />
+                <path class="head" d="M8 6 L8 68" />
+              </svg>
+            </span>
+            <span class="principle">Cross-sensory mapping</span>
+          </button>
+          <button class="card" data-toy="recall">
+            <span class="num">05</span><span class="verb">Recall</span><span class="go">&rarr;</span>
+            <span class="q">Watch a pattern light up in order, then redraw it from memory.</span>
+            <span class="preview"><span class="pv-seq"><i></i><i></i><i></i></span></span>
+            <span class="principle">Working memory</span>
+          </button>
+          <button class="card" data-toy="continue">
+            <span class="num">06</span><span class="verb">Continue</span><span class="go">&rarr;</span>
+            <span class="q">A pattern stops halfway. Draw where it goes next, then see the true path.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74" preserveAspectRatio="none">
+                <path class="solid" d="M12 50 C 40 12, 62 60, 92 32" />
+                <path class="ghost" d="M92 32 C 122 10, 152 56, 190 28" />
+              </svg>
+            </span>
+            <span class="principle">Pattern prediction</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Family: LET GO -->
+      <section class="family reveal" data-fam="letgo" style="animation-delay:.4s">
+        <div class="family-head">
+          <span class="fam-verb">Let go</span>
+          <span class="fam-desc">Aim, release, and read what your rules produce.</span>
+          <span class="fam-line"></span>
+        </div>
+        <div class="cards">
+          <button class="card" data-toy="garden">
+            <span class="num">07</span><span class="verb">Constellations</span><span class="go">&rarr;</span>
+            <span class="q">Fling seeds and watch simple pulls settle them into constellations.</span>
+            <span class="preview"><span class="pv-orbit"><span></span><span></span><span></span></span></span>
+            <span class="principle">Systems thinking</span>
+          </button>
+          <button class="card" data-toy="aim">
+            <span class="num">08</span><span class="verb">Aim</span><span class="go">&rarr;</span>
+            <span class="q">Curve a seed through gravity to hit the mark. Picture the path before you release.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74">
+                <path class="ghost" d="M30 62 Q 100 -6 152 40" />
+                <circle class="mark" cx="156" cy="42" r="9" />
+                <circle class="seed" cx="30" cy="62" r="4" />
+              </svg>
+            </span>
+            <span class="principle">Mental simulation</span>
+          </button>
+          <button class="card" data-toy="tinker">
+            <span class="num">09</span><span class="verb">Tinker</span><span class="go">&rarr;</span>
+            <span class="q">Change one rule at a time until the seeds do what is asked of them.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74">
+                <line class="ghost" x1="80" y1="40" x2="120" y2="40" />
+                <circle class="seed" cx="80" cy="40" r="5" />
+                <circle class="seed" cx="120" cy="40" r="5" />
+                <path class="mark" d="M92 22 A 16 16 0 0 1 108 22" />
+              </svg>
+            </span>
+            <span class="principle">Causal reasoning</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Family: LOOK -->
+      <section class="family reveal" data-fam="look" style="animation-delay:.5s">
+        <div class="family-head">
+          <span class="fam-verb">Look</span>
+          <span class="fam-desc">Track it, uncover it, turn it to fit. Ways of seeing closely.</span>
+          <span class="fam-line"></span>
+        </div>
+        <div class="cards">
+          <button class="card" data-toy="follow">
+            <span class="num">10</span><span class="verb">Follow</span><span class="go">&rarr;</span>
+            <span class="q">Keep your hand on a wandering light as it drifts and quietly speeds up.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74" preserveAspectRatio="none">
+                <path class="ghost" d="M12 50 C 52 12, 92 62, 130 30 S 180 40, 192 22" />
+                <circle class="seed" cx="192" cy="22" r="4" />
+              </svg>
+            </span>
+            <span class="principle">Visual tracking</span>
+          </button>
+          <button class="card" data-toy="fog">
+            <span class="num">11</span><span class="verb">Fog</span><span class="go">&rarr;</span>
+            <span class="q">Wipe away the fog to find a hidden light in as few strokes as you can.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74">
+                <circle class="seed" cx="112" cy="37" r="7" />
+                <path class="ghost" d="M34 24 Q 112 66 178 26" />
+              </svg>
+            </span>
+            <span class="principle">Visual search</span>
+          </button>
+          <button class="card" data-toy="turn">
+            <span class="num">12</span><span class="verb">Turn</span><span class="go">&rarr;</span>
+            <span class="q">Rotate a shape until it settles into the faint silhouette waiting for it.</span>
+            <span class="preview">
+              <svg class="pv-svg" viewBox="0 0 200 74">
+                <polygon class="ghost" points="100,16 132,54 68,54" />
+                <polygon class="solid" points="100,20 128,52 72,52" transform="rotate(40 100 40)" />
+              </svg>
+            </span>
+            <span class="principle">Mental rotation</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <p class="credit reveal" style="animation-delay:.5s">
+      A study in embodied inquiry: exercising a cognitive skill by doing it, not reading about it.
+      One self-contained page, no backend, works offline once loaded.
+      Sound is on in several toys. Best with the volume up.
+    </p>
+  </section>
+
+  <!-- ================= BLOOM ================= -->
+  <section id="view-bloom" class="view toy">
+    <div class="stage"><canvas id="bloom-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">What does <em>patience</em> feel like?</div>
+      <div class="principle">01 · Hold · impulse control</div>
+      <div class="dial" id="bloom-dial">
+        <span class="dial-label">wait</span>
+        <div class="dial-track" role="group" aria-label="wait length">
+          <button class="dial-seg" type="button">quick</button>
+          <button class="dial-seg" type="button">gentle</button>
+          <button class="dial-seg" type="button">long</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="bloom-hint">Press and <span class="k">hold</span> anywhere. Keep holding. Growth speeds up the longer you wait. Let go too soon and it wilts.</div>
+      <div class="counter" id="bloom-count">0 <small>bloomed</small></div>
+    </div>
+  </section>
+
+  <!-- ================= ECHO ================= -->
+  <section id="view-echo" class="view toy">
+    <div class="stage"><canvas id="echo-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you <em>draw</em> with sound?</div>
+      <div class="principle">04 · Draw · cross-sensory mapping</div>
+      <div class="dial" id="echo-dial">
+        <span class="dial-label">voice</span>
+        <div class="dial-track" role="group" aria-label="sound voice">
+          <button class="dial-seg" type="button">calm</button>
+          <button class="dial-seg" type="button">bright</button>
+          <button class="dial-seg" type="button">deep</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="echo-hint"><span class="k">Drag</span> to draw a line. Height becomes pitch, width becomes time. The sweep loops your drawing back as a melody.</div>
+      <div class="tools">
+        <button class="tool" id="echo-clear">clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= GARDEN ================= -->
+  <section id="view-garden" class="view toy">
+    <div class="stage"><canvas id="garden-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">What happens if you <em>let go</em>?</div>
+      <div class="principle">07 · Let go · systems thinking</div>
+      <div class="dial" id="garden-dial">
+        <span class="dial-label">pull</span>
+        <div class="dial-track" role="group" aria-label="mutual pull">
+          <button class="dial-seg" type="button">gather</button>
+          <button class="dial-seg" type="button">orbit</button>
+          <button class="dial-seg" type="button">scatter</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="garden-hint"><span class="k">Drag</span> from anywhere to pull back a seed, then <span class="k">let go</span> to fling it. Seeds pull on each other and settle into constellations.</div>
+      <div class="counter" id="garden-count">0 <small>seeds adrift</small></div>
+      <div class="tools">
+        <button class="tool" id="garden-clear">clear</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEADY (02) ================= -->
+  <section id="view-steady" class="view toy">
+    <div class="stage"><canvas id="steady-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you stay <em>still</em>?</div>
+      <div class="principle">02 · Hold · sustained attention</div>
+      <div class="dial" id="steady-dial">
+        <span class="dial-label">focus</span>
+        <div class="dial-track" role="group" aria-label="stillness tolerance">
+          <button class="dial-seg" type="button">forgiving</button>
+          <button class="dial-seg" type="button">steady</button>
+          <button class="dial-seg" type="button">strict</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="steady-hint">Press and <span class="k">hold</span>, then keep your hand still. A steady hand feeds the light. Any drift lets it fade.</div>
+      <div class="counter" id="steady-count">0 <small>stilled</small></div>
+    </div>
+  </section>
+
+  <!-- ================= COUNT (03) ================= -->
+  <section id="view-count" class="view toy">
+    <div class="stage"><canvas id="count-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">How well do you <em>feel time</em>?</div>
+      <div class="principle">03 · Hold · time perception</div>
+      <div class="dial" id="count-dial">
+        <span class="dial-label">span</span>
+        <div class="dial-track" role="group" aria-label="target span">
+          <button class="dial-seg" type="button">short</button>
+          <button class="dial-seg" type="button">mid</button>
+          <button class="dial-seg" type="button">long</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="count-hint">Press and <span class="k">hold</span> for the target length. No clock. Let go when you think the time is up.</div>
+      <div class="counter" id="count-count">0 <small>on target</small></div>
+    </div>
+  </section>
+
+  <!-- ================= RECALL (05) ================= -->
+  <section id="view-recall" class="view toy">
+    <div class="stage"><canvas id="recall-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you hold a <em>pattern</em>?</div>
+      <div class="principle">05 · Draw · working memory</div>
+      <div class="dial" id="recall-dial">
+        <span class="dial-label">length</span>
+        <div class="dial-track" role="group" aria-label="starting length">
+          <button class="dial-seg" type="button">3</button>
+          <button class="dial-seg" type="button">4</button>
+          <button class="dial-seg" type="button">5</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="recall-hint">Watch the dots light up in order. Then <span class="k">tap</span> them back in the same order.</div>
+      <div class="counter" id="recall-count">level 3</div>
+      <div class="tools">
+        <button class="tool" id="recall-replay">replay</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTINUE (06) ================= -->
+  <section id="view-continue" class="view toy">
+    <div class="stage"><canvas id="continue-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Where does it <em>go next</em>?</div>
+      <div class="principle">06 · Draw · pattern prediction</div>
+      <div class="dial" id="continue-dial">
+        <span class="dial-label">rule</span>
+        <div class="dial-track" role="group" aria-label="rule complexity">
+          <button class="dial-seg" type="button">simple</button>
+          <button class="dial-seg" type="button">wavy</button>
+          <button class="dial-seg" type="button">tricky</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="continue-hint">The line stops halfway. <span class="k">Draw</span> its continuation to the right edge. Then see the real path.</div>
+      <div class="counter" id="continue-count">&mdash;</div>
+      <div class="tools">
+        <button class="tool" id="continue-next">new pattern</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= AIM (08) ================= -->
+  <section id="view-aim" class="view toy">
+    <div class="stage"><canvas id="aim-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you picture the <em>path</em>?</div>
+      <div class="principle">08 · Let go · mental simulation</div>
+      <div class="dial" id="aim-dial">
+        <span class="dial-label">gravity</span>
+        <div class="dial-track" role="group" aria-label="gravity strength">
+          <button class="dial-seg" type="button">light</button>
+          <button class="dial-seg" type="button">normal</button>
+          <button class="dial-seg" type="button">heavy</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="aim-hint"><span class="k">Drag</span> to aim, then <span class="k">let go</span>. Gravity curves the seed. Guide it through the ring.</div>
+      <div class="counter" id="aim-count">0 <small>hits</small></div>
+    </div>
+  </section>
+
+  <!-- ================= TINKER (09) ================= -->
+  <section id="view-tinker" class="view toy">
+    <div class="stage"><canvas id="tinker-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">What <em>causes</em> what?</div>
+      <div class="principle">09 · Let go · causal reasoning</div>
+      <div class="dial" id="tinker-dial">
+        <span class="dial-label">parts</span>
+        <div class="dial-track" role="group" aria-label="number of parts">
+          <button class="dial-seg" type="button">few</button>
+          <button class="dial-seg" type="button">some</button>
+          <button class="dial-seg" type="button">many</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="tinker-hint">Goal: make the seeds <span class="k">gather</span>. Change the rule until they do.</div>
+      <div class="counter" id="tinker-count">0 <small>solved</small></div>
+      <div class="tools">
+        <button class="tool" id="tinker-mode">force: repel</button>
+        <button class="tool" id="tinker-strength">pull: gentle</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOLLOW (10) ================= -->
+  <section id="view-follow" class="view toy">
+    <div class="stage"><canvas id="follow-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you <em>stay with it</em>?</div>
+      <div class="principle">10 · Look · visual tracking</div>
+      <div class="dial" id="follow-dial">
+        <span class="dial-label">speed</span>
+        <div class="dial-track" role="group" aria-label="drift speed">
+          <button class="dial-seg" type="button">calm</button>
+          <button class="dial-seg" type="button">lively</button>
+          <button class="dial-seg" type="button">quick</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="follow-hint">Keep your pointer on the <span class="k">light</span> as it wanders. Stay on it to build your streak. Drift off and it resets.</div>
+      <div class="counter" id="follow-count">0.0s <small>best</small></div>
+    </div>
+  </section>
+
+  <!-- ================= FOG (11) ================= -->
+  <section id="view-fog" class="view toy">
+    <div class="stage"><canvas id="fog-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you <em>find it</em>?</div>
+      <div class="principle">11 · Look · visual search</div>
+      <div class="dial" id="fog-dial">
+        <span class="dial-label">reach</span>
+        <div class="dial-track" role="group" aria-label="wipe reach">
+          <button class="dial-seg" type="button">narrow</button>
+          <button class="dial-seg" type="button">normal</button>
+          <button class="dial-seg" type="button">wide</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="fog-hint"><span class="k">Wipe</span> away the fog to find the hidden light. Try to find it with as little wiping as you can.</div>
+      <div class="counter" id="fog-count">0 <small>found</small></div>
+    </div>
+  </section>
+
+  <!-- ================= TURN (12) ================= -->
+  <section id="view-turn" class="view toy">
+    <div class="stage"><canvas id="turn-cv"></canvas></div>
+    <div class="toy-head">
+      <div class="q">Can you <em>turn it to fit</em>?</div>
+      <div class="principle">12 · Look · mental rotation</div>
+      <div class="dial" id="turn-dial">
+        <span class="dial-label">shape</span>
+        <div class="dial-track" role="group" aria-label="shape complexity">
+          <button class="dial-seg" type="button">simple</button>
+          <button class="dial-seg" type="button">normal</button>
+          <button class="dial-seg" type="button">tricky</button>
+        </div>
+      </div>
+    </div>
+    <div class="toy-hud">
+      <div class="hint" id="turn-hint"><span class="k">Drag</span> around the center to rotate the shape until it lands on the faint silhouette.</div>
+      <div class="counter" id="turn-count">0 <small>matched</small></div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   Three Questions — a play study by aaryaa
+   Single file, vanilla JS. Three toys behind one router.
+   ============================================================ */
+
+/* ---------- shared helpers ---------- */
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// seeded RNG (mulberry32) for reproducible-but-varied generation
+function rng(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function fit(canvas) {
+  const r = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.max(1, Math.round(r.width * dpr));
+  canvas.height = Math.max(1, Math.round(r.height * dpr));
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w: r.width, h: r.height, ctx };
+}
+
+function pointerPos(canvas, e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+// wire a 3-segment dial by container id; onSet(index) fires on select. Clicks bound once.
+function wireDial(id, defIndex, onSet) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const segs = Array.prototype.slice.call(el.querySelectorAll(".dial-seg"));
+  function select(i) {
+    segs.forEach((s, k) => s.setAttribute("aria-pressed", k === i ? "true" : "false"));
+    onSet(i);
+  }
+  segs.forEach((s, i) => s.addEventListener("click", () => { select(i); audio(); }));
+  select(defIndex);
+}
+
+/* ---------- shared audio ---------- */
+let AC = null;
+let muted = false;   // toggled by the top-bar sound control
+function audio() {
+  if (!AC) {
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { AC = null; }
+  }
+  if (AC && AC.state === "suspended") AC.resume();
+  return AC;
+}
+function tone(freq, { dur = 0.5, type = "sine", gain = 0.14, when = 0 } = {}) {
+  if (muted) return;
+  const ac = audio();
+  if (!ac) return;
+  const t0 = ac.currentTime + when;
+  const osc = ac.createOscillator();
+  const g = ac.createGain();
+  const filter = ac.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 2600;
+  osc.type = type;
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  osc.connect(filter); filter.connect(g); g.connect(ac.destination);
+  osc.start(t0); osc.stop(t0 + dur + 0.05);
+}
+
+/* unlock audio on first gesture anywhere */
+["pointerdown", "keydown"].forEach(ev =>
+  window.addEventListener(ev, () => audio(), { once: true, passive: true }));
+
+/* ============================================================
+   ROUTER
+   ============================================================ */
+const Router = (() => {
+  const toys = {};
+  let current = "hub";
+
+  function show(view) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("view-" + view).classList.add("active");
+    document.body.dataset.view = view;
+
+    if (current !== "hub" && toys[current]) toys[current].leave();
+    current = view;
+
+    const labels = {
+      hub: "play studies",
+      bloom: "01 · impulse control", steady: "02 · sustained attention", count: "03 · time perception",
+      echo: "04 · cross-sensory mapping", recall: "05 · working memory", continue: "06 · pattern prediction",
+      garden: "07 · systems thinking", aim: "08 · mental simulation", tinker: "09 · causal reasoning",
+      follow: "10 · visual tracking", fog: "11 · visual search", turn: "12 · mental rotation"
+    };
+    document.getElementById("context").textContent = labels[view] || "play studies";
+
+    if (view !== "hub" && toys[view]) {
+      // let layout settle before measuring the canvas
+      requestAnimationFrame(() => requestAnimationFrame(() => toys[view].enter()));
+    }
+  }
+
+  return {
+    register(name, toy) { toys[name] = toy; },
+    show,
+    get current() { return current; }
+  };
+})();
+
+document.body.dataset.view = "hub";
+document.querySelectorAll(".card").forEach(card =>
+  card.addEventListener("click", () => Router.show(card.dataset.toy)));
+document.getElementById("backBtn").addEventListener("click", () => Router.show("hub"));
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && Router.current !== "hub") Router.show("hub");
+});
+
+/* ---------- global sound toggle ---------- */
+(() => {
+  const btn = document.getElementById("muteBtn");
+  const label = btn.querySelector(".mute-label");
+  function set(m) {
+    muted = m;
+    btn.dataset.muted = m ? "true" : "false";
+    btn.setAttribute("aria-pressed", m ? "true" : "false");
+    btn.setAttribute("aria-label", m ? "Unmute sound" : "Mute sound");
+    label.textContent = m ? "muted" : "sound";
+    try { localStorage.setItem("ps-muted", m ? "1" : "0"); } catch (e) {}
+  }
+  btn.addEventListener("click", () => set(!muted));
+  try { if (localStorage.getItem("ps-muted") === "1") set(true); } catch (e) {}
+})();
+
+/* ============================================================
+   TOY 01 — BLOOM  (press & hold; delayed gratification)
+   ============================================================ */
+Router.register("bloom", (() => {
+  const cv = document.getElementById("bloom-cv");
+  const hintEl = document.getElementById("bloom-hint");
+  const countEl = document.getElementById("bloom-count");
+  let ctx, W, H, raf = null, running = false, last = 0;
+
+  const HUES = [10, 340, 32, 300, 168]; // coral, rose, amber, violet, jade
+  let BLOOM_MS = 3200;                   // full bloom hold time (dial: wait)
+  wireDial("bloom-dial", 1, i => { BLOOM_MS = [2000, 3200, 5200][i]; });
+  let plant = null;
+  let drifters = [];
+  let pollen = [];
+  let bloomed = 0;
+  let holding = false;
+
+  // growth is derived from elapsed hold time, so it is frame-rate independent
+  function growthOf(pl, now) {
+    if (!pl) return 0;
+    if (pl.frozen != null) return pl.frozen;
+    return clamp((now - pl.holdStart) / BLOOM_MS, 0, 1);
+  }
+
+  function makePlant(x, y) {
+    const seed = (Math.random() * 1e9) | 0;
+    const r = rng(seed);
+    const petalCount = 5 + Math.floor(r() * 5);       // 5..9
+    const hue = HUES[Math.floor(r() * HUES.length)] + (r() * 24 - 12);
+    const petals = [];
+    for (let i = 0; i < petalCount; i++) {
+      petals.push({
+        ang: (i / petalCount) * TAU + r() * 0.12,
+        len: 34 + r() * 26,
+        wid: 15 + r() * 12,
+        threshold: 0.42 + (i / petalCount) * 0.5,
+        hue: hue + (r() * 30 - 15)
+      });
+    }
+    return {
+      x, y, growth: 0, petals, hue,
+      stemH: 130 + r() * 130,
+      swayPhase: r() * TAU,
+      core: 7 + r() * 6,
+      wilting: false, fade: 1, seed,
+      holdStart: performance.now(), frozen: null, ready: false
+    };
+  }
+
+  function down(e) {
+    e.preventDefault();
+    audio();
+    const p = pointerPos(cv, e);
+    if (!plant) plant = makePlant(p.x, Math.min(p.y + 40, H - 30));
+    holding = true;
+    hintEl.style.opacity = ".35";
+  }
+  function up() {
+    if (!plant || !holding) return;
+    holding = false;
+    plant.growth = growthOf(plant, performance.now());
+    plant.frozen = plant.growth;
+    if (plant.growth >= 0.999) complete();
+    else wilt();
+  }
+
+  function complete() {
+    bloomed++;
+    countEl.innerHTML = bloomed + ' <small>bloomed</small>';
+    // release the flower as a drifter
+    drifters.push({
+      x: plant.x, y: plant.y - plant.stemH, vy: -0.5 - Math.random() * 0.4,
+      sway: Math.random() * TAU, hue: plant.hue,
+      petals: plant.petals.map(p => ({ ...p })), core: plant.core, alpha: 1, scale: 1
+    });
+    // pollen burst
+    const cx = plant.x, cy = plant.y - plant.stemH;
+    const n = reduced ? 14 : 42;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * TAU, sp = 0.6 + Math.random() * 3.2;
+      pollen.push({ x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.6,
+        life: 1, hue: plant.hue + (Math.random() * 40 - 20), r: 1.2 + Math.random() * 2.4 });
+    }
+    tone(392 * Math.pow(2, (plant.hue % 12) / 12), { dur: 0.9, type: "triangle", gain: 0.12 });
+    tone(392 * 1.5, { dur: 0.7, type: "sine", gain: 0.06, when: 0.04 });
+    plant = null;
+    hintEl.style.opacity = "";
+  }
+
+  function wilt() {
+    plant.wilting = true;
+    hintEl.innerHTML = 'So close. It needs a little more <span class="k">patience</span>. Hold longer next time.';
+    hintEl.style.opacity = "";
+    tone(150, { dur: 0.5, type: "sine", gain: 0.06 });
+  }
+
+  function drawFlowerHead(x, y, pl, growthOrScale, alpha) {
+    // core
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    for (const p of pl.petals) {
+      const local = clamp((growthOrScale - p.threshold) / 0.2, 0, 1);
+      if (local <= 0) continue;
+      const s = easeOut(local);
+      const droop = pl.wilting ? (1 - pl.fade) * 0.9 : 0;
+      const ang = p.ang + droop;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      ctx.scale(s, s);
+      const grd = ctx.createLinearGradient(0, 0, 0, -p.len);
+      grd.addColorStop(0, `hsla(${p.hue},85%,64%,${0.28 * alpha})`);
+      grd.addColorStop(1, `hsla(${p.hue},92%,68%,${0.95 * alpha})`);
+      ctx.fillStyle = grd;
+      ctx.shadowColor = `hsla(${p.hue},90%,60%,.55)`;
+      ctx.shadowBlur = 22;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(p.wid, -p.len * 0.5, 0, -p.len);
+      ctx.quadraticCurveTo(-p.wid, -p.len * 0.5, 0, 0);
+      ctx.fill();
+      ctx.restore();
+    }
+    // center
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${pl.hue + 30},90%,72%,${alpha})`;
+    ctx.shadowColor = `hsla(${pl.hue + 30},90%,70%,.8)`;
+    ctx.shadowBlur = 26;
+    ctx.arc(x, y, pl.core * easeOut(clamp((growthOrScale - 0.4) / 0.4, 0, 1)), 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function frame(t) {
+    if (!running) return;
+    const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
+    ctx.clearRect(0, 0, W, H);
+
+    // growth (derived from elapsed hold time)
+    if (plant && holding && !plant.wilting) {
+      plant.growth = growthOf(plant, t);
+      if (plant.growth >= 1 && !plant.ready) {
+        plant.ready = true;
+        tone(523, { dur: 0.3, type: "sine", gain: 0.05 }); // gentle "ready" chime
+      }
+    }
+    if (plant && plant.wilting) {
+      plant.fade -= dt * 0.9;
+      if (plant.fade <= 0) plant = null;
+    }
+
+    // current plant
+    if (plant) {
+      const g = plant.growth;
+      const stemGrow = easeOut(clamp(g / 0.5, 0, 1));
+      const topY = plant.y - plant.stemH * stemGrow;
+      const sway = Math.sin(t / 900 + plant.swayPhase) * (6 + g * 8) * (plant.wilting ? 2 : 1);
+      const topX = plant.x + sway;
+      const a = plant.wilting ? plant.fade : 1;
+
+      // stem
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = `hsla(140,45%,${45 + g * 12}%,.85)`;
+      ctx.lineWidth = lerp(2, 5.5, g);
+      ctx.lineCap = "round";
+      ctx.shadowColor = "hsla(150,60%,50%,.4)"; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(plant.x, plant.y);
+      ctx.quadraticCurveTo(plant.x + sway * 0.4, (plant.y + topY) / 2, topX, topY);
+      ctx.stroke();
+      ctx.restore();
+
+      // readiness halo
+      if (g > 0.55) {
+        ctx.save();
+        ctx.globalAlpha = (g - 0.55) / 0.45 * 0.5 * a;
+        const halo = ctx.createRadialGradient(topX, topY, 0, topX, topY, 70 + g * 40);
+        halo.addColorStop(0, `hsla(${plant.hue},90%,65%,.5)`);
+        halo.addColorStop(1, `hsla(${plant.hue},90%,65%,0)`);
+        ctx.fillStyle = halo;
+        ctx.beginPath(); ctx.arc(topX, topY, 70 + g * 40, 0, TAU); ctx.fill();
+        ctx.restore();
+      }
+
+      drawFlowerHead(topX, topY, plant, g, a);
+
+      // "ready" cue ring
+      if (g >= 1 && !plant.wilting) {
+        const pulse = 0.5 + 0.5 * Math.sin(t / 220);
+        ctx.save();
+        ctx.globalAlpha = 0.4 + pulse * 0.3;
+        ctx.strokeStyle = `hsla(${plant.hue + 30},90%,72%,.9)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(topX, topY, 54 + pulse * 8, 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    // drifters (completed blooms floating up)
+    drifters = drifters.filter(d => d.alpha > 0.02);
+    for (const d of drifters) {
+      d.y += d.vy; d.vy *= 0.999; d.sway += 0.02;
+      d.x += Math.sin(d.sway) * 0.6;
+      d.alpha -= 0.0045; d.scale = lerp(d.scale, 1.15, 0.02);
+      drawFlowerHead(d.x, d.y, { petals: d.petals, hue: d.hue, core: d.core, wilting: false }, 1, d.alpha);
+    }
+
+    // pollen
+    pollen = pollen.filter(p => p.life > 0);
+    for (const p of pollen) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.vx *= 0.98; p.vy *= 0.98;
+      p.life -= 0.012;
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${p.hue},90%,70%,${p.life})`;
+      ctx.shadowColor = `hsla(${p.hue},90%,65%,.7)`; ctx.shadowBlur = 10;
+      ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+
+  cv.addEventListener("pointerdown", down);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+
+  return {
+    enter() {
+      resize(); running = true; last = performance.now();
+      window.addEventListener("resize", resize);
+      raf = requestAnimationFrame(frame);
+    },
+    leave() {
+      running = false; if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      plant = null; holding = false; drifters = []; pollen = [];
+      hintEl.style.opacity = "";
+    }
+  };
+})());
+
+/* ============================================================
+   TOY 02 — ECHO  (draw with sound; cross-sensory mapping)
+   ============================================================ */
+Router.register("echo", (() => {
+  const cv = document.getElementById("echo-cv");
+  const hintEl = document.getElementById("echo-hint");
+  document.getElementById("echo-clear").addEventListener("click", () => { notes.length = 0; nextId = 0; });
+
+  let ctx, W, H, raf = null, running = false;
+  let notes = [];
+  let nextId = 0;
+  let drawing = false, lastAdd = null, curStroke = 0;
+  let echoBase = 196, echoType = "triangle";
+  wireDial("echo-dial", 0, i => { [echoBase, echoType] = [[196, "triangle"], [294, "triangle"], [147, "sine"]][i]; });
+  const LOOP = 4.6;               // seconds per sweep
+  let startT = 0, prevX = 0;
+  let triggered = new Set();
+  const PENTA = [0, 2, 4, 7, 9];  // major pentatonic
+  const STEPS = 16;
+
+  function freqFor(y) {
+    const t = 1 - clamp(y / H, 0, 1);           // bottom = low, top = high
+    const idx = Math.round(t * (STEPS - 1));
+    const oct = Math.floor(idx / PENTA.length);
+    const deg = PENTA[idx % PENTA.length];
+    return echoBase * Math.pow(2, (deg + oct * 12) / 12); // base set by the voice dial
+  }
+  function hueFor(y) { return 200 + (1 - clamp(y / H, 0, 1)) * 160; }
+
+  function addNote(p) {
+    notes.push({ id: nextId++, x: p.x, y: p.y, stroke: curStroke,
+      hue: hueFor(p.y), pulse: 0 });
+    if (notes.length > 480) notes.shift();
+  }
+
+  function down(e) {
+    e.preventDefault(); audio();
+    drawing = true; curStroke++;
+    const p = pointerPos(cv, e);
+    addNote(p); lastAdd = p;
+    if (hintEl) hintEl.style.opacity = ".35";
+  }
+  function move(e) {
+    if (!drawing) return;
+    const p = pointerPos(cv, e);
+    if (!lastAdd || Math.hypot(p.x - lastAdd.x, p.y - lastAdd.y) > 15) {
+      addNote(p); lastAdd = p;
+    }
+  }
+  function up() { drawing = false; lastAdd = null; }
+
+  function frame(t) {
+    if (!running) return;
+    const now = performance.now() / 1000;
+    const phase = ((now - startT) % LOOP) / LOOP;
+    const px = phase * W;
+    if (px < prevX) { triggered.clear(); prevX = 0; } // wrapped
+
+    // trigger notes the playhead just passed
+    for (const n of notes) {
+      if (!triggered.has(n.id) && n.x > prevX && n.x <= px) {
+        triggered.add(n.id);
+        n.pulse = 1;
+        tone(freqFor(n.y), { dur: 0.6, type: echoType, gain: 0.09 });
+      }
+    }
+    prevX = px;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // connecting lines within each stroke
+    ctx.lineWidth = 2.4; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    let started = false, prevStroke = -1;
+    for (const n of notes) {
+      if (n.stroke !== prevStroke) {
+        if (started) ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(n.x, n.y);
+        ctx.strokeStyle = `hsla(${n.hue},80%,66%,.5)`;
+        ctx.shadowColor = `hsla(${n.hue},85%,60%,.6)`; ctx.shadowBlur = 10;
+        started = true; prevStroke = n.stroke;
+      } else ctx.lineTo(n.x, n.y);
+    }
+    if (started) ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // note dots
+    for (const n of notes) {
+      const r = 3 + n.pulse * 12;
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${n.hue},85%,${60 + n.pulse * 20}%,${0.5 + n.pulse * 0.5})`;
+      ctx.shadowColor = `hsla(${n.hue},85%,62%,.8)`;
+      ctx.shadowBlur = 8 + n.pulse * 24;
+      ctx.arc(n.x, n.y, r, 0, TAU); ctx.fill();
+      n.pulse *= 0.9;
+    }
+    ctx.shadowBlur = 0;
+
+    // playhead
+    const grd = ctx.createLinearGradient(px - 40, 0, px + 40, 0);
+    grd.addColorStop(0, "hsla(40,100%,65%,0)");
+    grd.addColorStop(0.5, "hsla(40,100%,65%,.5)");
+    grd.addColorStop(1, "hsla(40,100%,65%,0)");
+    ctx.fillStyle = grd;
+    ctx.fillRect(px - 40, 0, 80, H);
+    ctx.strokeStyle = "hsla(42,100%,70%,.9)";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+
+  return {
+    enter() {
+      resize(); running = true; startT = performance.now() / 1000; prevX = 0;
+      triggered.clear();
+      window.addEventListener("resize", resize);
+      raf = requestAnimationFrame(frame);
+    },
+    leave() {
+      running = false; if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      drawing = false;
+    }
+  };
+})());
+
+/* ============================================================
+   TOY 03 — GARDEN  (fling seeds; emergence & loose parts)
+   ============================================================ */
+Router.register("garden", (() => {
+  const cv = document.getElementById("garden-cv");
+  const countEl = document.getElementById("garden-count");
+  const hintEl = document.getElementById("garden-hint");
+  document.getElementById("garden-clear").addEventListener("click", () => { seeds.length = 0; updateCount(); });
+
+  let ctx, W, H, raf = null, running = false;
+  let seeds = [];
+  let aiming = false, aimStart = null, aimCur = null;
+  let gAttract = 14;   // dial: gather / orbit / scatter (negative repels)
+  wireDial("garden-dial", 1, i => { gAttract = [26, 14, -8][i]; });
+  const HUES = [168, 260, 12, 42, 320];
+  const MAX = 46;
+  const LINK = 150;
+
+  function updateCount() {
+    countEl.innerHTML = seeds.length + ' <small>seed' + (seeds.length === 1 ? '' : 's') + ' adrift</small>';
+  }
+
+  function spawn(x, y, vx, vy) {
+    const hue = HUES[(Math.random() * HUES.length) | 0] + (Math.random() * 20 - 10);
+    seeds.push({ x, y, vx, vy, hue, m: 0.8 + Math.random() * 0.8, r: 3.5 + Math.random() * 3 });
+    if (seeds.length > MAX) seeds.shift();
+    updateCount();
+    tone(180 + Math.random() * 220, { dur: 0.35, type: "sine", gain: 0.05 });
+  }
+
+  function down(e) {
+    e.preventDefault(); audio();
+    aiming = true;
+    aimStart = pointerPos(cv, e);
+    aimCur = { ...aimStart };
+    if (hintEl) hintEl.style.opacity = ".35";
+  }
+  function move(e) { if (aiming) aimCur = pointerPos(cv, e); }
+  function up() {
+    if (!aiming || !aimStart) { aiming = false; return; }
+    const dx = aimStart.x - aimCur.x, dy = aimStart.y - aimCur.y;
+    const k = 0.12;
+    spawn(aimStart.x, aimStart.y, dx * k, dy * k);
+    aiming = false; aimStart = aimCur = null;
+  }
+
+  function step(dt) {
+    const cx = W / 2, cy = H / 2;
+    for (let i = 0; i < seeds.length; i++) {
+      const s = seeds[i];
+      // gentle pull toward center keeps play on-screen
+      let ax = (cx - s.x) * 0.00018;
+      let ay = (cy - s.y) * 0.00018;
+      // mutual attraction (softened) + close-range repulsion
+      for (let j = 0; j < seeds.length; j++) {
+        if (i === j) continue;
+        const o = seeds[j];
+        const dx = o.x - s.x, dy = o.y - s.y;
+        const d2 = dx * dx + dy * dy + 60;
+        const d = Math.sqrt(d2);
+        const attract = (gAttract * o.m) / d2;
+        const repel = d < 26 ? -260 / (d2) : 0;
+        ax += (dx / d) * (attract + repel);
+        ay += (dy / d) * (attract + repel);
+      }
+      s.vx = (s.vx + ax * dt * 60) * 0.995;
+      s.vy = (s.vy + ay * dt * 60) * 0.995;
+      const sp = Math.hypot(s.vx, s.vy);
+      const cap = 6;
+      if (sp > cap) { s.vx = s.vx / sp * cap; s.vy = s.vy / sp * cap; }
+      s.x += s.vx; s.y += s.vy;
+      // soft bounds
+      const pad = 8;
+      if (s.x < pad) { s.x = pad; s.vx *= -0.5; }
+      if (s.x > W - pad) { s.x = W - pad; s.vx *= -0.5; }
+      if (s.y < pad) { s.y = pad; s.vy *= -0.5; }
+      if (s.y > H - pad) { s.y = H - pad; s.vy *= -0.5; }
+    }
+  }
+
+  function frame(t) {
+    if (!running) return;
+    // motion-blur trails
+    ctx.fillStyle = "rgba(23,17,14,0.16)";
+    ctx.fillRect(0, 0, W, H);
+
+    step(1 / 60);
+
+    // central attractor glow
+    const cx = W / 2, cy = H / 2;
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120);
+    core.addColorStop(0, "rgba(243,233,218,.05)");
+    core.addColorStop(1, "rgba(243,233,218,0)");
+    ctx.fillStyle = core;
+    ctx.beginPath(); ctx.arc(cx, cy, 120, 0, TAU); ctx.fill();
+
+    // constellation links
+    for (let i = 0; i < seeds.length; i++) {
+      for (let j = i + 1; j < seeds.length; j++) {
+        const a = seeds[i], b = seeds[j];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < LINK) {
+          const alpha = (1 - d / LINK) * 0.5;
+          ctx.strokeStyle = `hsla(${(a.hue + b.hue) / 2},70%,68%,${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      }
+    }
+
+    // seeds
+    for (const s of seeds) {
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${s.hue},85%,66%,1)`;
+      ctx.shadowColor = `hsla(${s.hue},90%,60%,.9)`;
+      ctx.shadowBlur = 16;
+      ctx.arc(s.x, s.y, s.r, 0, TAU); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+
+    // aim / slingshot
+    if (aiming && aimStart && aimCur) {
+      const dx = aimStart.x - aimCur.x, dy = aimStart.y - aimCur.y;
+      const power = clamp(Math.hypot(dx, dy) / 220, 0, 1);
+      // pull line
+      ctx.strokeStyle = "rgba(243,233,218,.25)";
+      ctx.setLineDash([4, 6]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(aimStart.x, aimStart.y); ctx.lineTo(aimCur.x, aimCur.y); ctx.stroke();
+      ctx.setLineDash([]);
+      // predicted launch vector
+      ctx.strokeStyle = `hsla(${lerp(168, 12, power)},85%,64%,.9)`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(aimStart.x, aimStart.y);
+      ctx.lineTo(aimStart.x + dx, aimStart.y + dy);
+      ctx.stroke();
+      // held seed
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${lerp(168, 12, power)},85%,66%,1)`;
+      ctx.shadowColor = `hsla(${lerp(168, 12, power)},90%,60%,.9)`; ctx.shadowBlur = 18;
+      ctx.arc(aimStart.x, aimStart.y, 4 + power * 4, 0, TAU); ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+
+  return {
+    enter() {
+      resize(); running = true;
+      ctx.clearRect(0, 0, W, H);
+      window.addEventListener("resize", resize);
+      // a few seeds to seed the emergence
+      if (seeds.length === 0) {
+        for (let i = 0; i < 5; i++) {
+          const a = (i / 5) * TAU;
+          spawn(W / 2 + Math.cos(a) * 120, H / 2 + Math.sin(a) * 120,
+            Math.cos(a + 1.4) * 1.6, Math.sin(a + 1.4) * 1.6);
+        }
+      }
+      updateCount();
+      raf = requestAnimationFrame(frame);
+    },
+    leave() {
+      running = false; if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+      aiming = false;
+    }
+  };
+})());
+
+/* ============================================================
+   TOY 02 — STEADY  (hold still; sustained attention)
+   ============================================================ */
+Router.register("steady", (() => {
+  const cv = document.getElementById("steady-cv");
+  const hintEl = document.getElementById("steady-hint");
+  const countEl = document.getElementById("steady-count");
+  let ctx, W, H, raf = null, running = false, last = 0;
+  let holding = false, charge = 0, jitter = 0, pos = null, lastPos = null, stilled = 0, celebrate = 0;
+  let HOLD_SECS = 4.5, STILL = 2.4;
+  wireDial("steady-dial", 1, i => { STILL = [3.6, 2.4, 1.5][i]; });
+
+  function down(e) { e.preventDefault(); audio(); pos = lastPos = pointerPos(cv, e); holding = true; jitter = 0; hintEl.style.opacity = ".35"; }
+  function move(e) { if (holding) pos = pointerPos(cv, e); }
+  function up() { holding = false; }
+
+  function frame(t) {
+    if (!running) return;
+    const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
+    ctx.clearRect(0, 0, W, H);
+
+    if (holding && pos) {
+      const mv = lastPos ? Math.hypot(pos.x - lastPos.x, pos.y - lastPos.y) : 0;
+      lastPos = { x: pos.x, y: pos.y };
+      jitter = lerp(jitter, mv, 0.25);
+      if (jitter < STILL) charge = clamp(charge + dt / HOLD_SECS, 0, 1);
+      else charge = clamp(charge - dt * 0.7, 0, 1);
+      if (charge >= 1 && celebrate <= 0) {
+        stilled++; countEl.innerHTML = stilled + ' <small>stilled</small>';
+        celebrate = 1.2; charge = 0;
+        tone(392, { dur: 0.8, type: "triangle", gain: 0.1 });
+        tone(588, { dur: 0.6, gain: 0.05, when: 0.05 });
+      }
+    } else {
+      charge = clamp(charge - dt * 0.4, 0, 1);
+    }
+    if (celebrate > 0) celebrate -= dt;
+
+    const p = pos || { x: W / 2, y: H / 2 };
+    const steady = holding ? clamp(1 - jitter / 6, 0, 1) : 0.5;
+
+    const R = 40 + charge * 120;
+    const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, R);
+    g.addColorStop(0, `hsla(14,90%,64%,${0.14 + charge * 0.34})`);
+    g.addColorStop(1, "hsla(14,90%,64%,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, R, 0, TAU); ctx.fill();
+
+    for (let i = 0; i < 3; i++) {
+      const rr = 24 + i * 20 + charge * 42;
+      const shake = holding ? (1 - steady) * 7 : 0;
+      const ox = shake ? (Math.random() * 2 - 1) * shake : 0;
+      const oy = shake ? (Math.random() * 2 - 1) * shake : 0;
+      ctx.strokeStyle = `hsla(14,90%,66%,${(0.5 - i * 0.12) * (0.4 + charge * 0.6)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(p.x + ox, p.y + oy, rr, 0, TAU); ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.fillStyle = `hsla(${lerp(14, 42, charge)},90%,${60 + charge * 12}%,1)`;
+    ctx.shadowColor = "hsla(24,90%,60%,.8)"; ctx.shadowBlur = 12 + charge * 30 + (celebrate > 0 ? celebrate * 40 : 0);
+    ctx.arc(p.x, p.y, 7 + charge * 6 + (celebrate > 0 ? celebrate * 10 : 0), 0, TAU); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "hsla(42,95%,66%,.9)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(p.x, p.y, 30, -Math.PI / 2, -Math.PI / 2 + charge * TAU); ctx.stroke();
+
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  return {
+    enter() { resize(); running = true; last = performance.now(); charge = 0; jitter = 0; pos = null; window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); holding = false; hintEl.style.opacity = ""; }
+  };
+})());
+
+/* ============================================================
+   TOY 03 — COUNT  (hold for a target with no clock; time perception)
+   ============================================================ */
+Router.register("count", (() => {
+  const cv = document.getElementById("count-cv");
+  const hintEl = document.getElementById("count-hint");
+  const countEl = document.getElementById("count-count");
+  let ctx, W, H, raf = null, running = false;
+  let phase = "ready", target = 3.5, holdStart = 0, actual = 0, err = 0, hits = 0;
+  let rangeLo = 3, rangeHi = 5.5;
+  wireDial("count-dial", 1, i => { [rangeLo, rangeHi] = [[2, 3.5], [3, 5.5], [5, 9]][i]; if (running) pickTarget(); });
+
+  function pickTarget() {
+    target = Math.round((rangeLo + Math.random() * (rangeHi - rangeLo)) * 2) / 2;
+    phase = "ready";
+    hintEl.innerHTML = `Hold for <span class="k">${target.toFixed(1)}s</span>. No clock. Let go when you feel the time is up.`;
+  }
+  function down(e) {
+    e.preventDefault(); audio();
+    if (phase === "result") pickTarget();
+    if (phase !== "ready") return;
+    holdStart = performance.now(); phase = "holding"; tone(330, { dur: 0.2, gain: 0.05 });
+  }
+  function up() {
+    if (phase !== "holding") return;
+    actual = (performance.now() - holdStart) / 1000; err = actual - target; phase = "result";
+    const close = Math.abs(err) <= 0.35;
+    if (close) { hits++; countEl.innerHTML = hits + ' <small>on target</small>'; tone(528, { dur: 0.7, type: "triangle", gain: 0.1 }); }
+    else tone(220, { dur: 0.5, gain: 0.06 });
+    hintEl.innerHTML = `You held <span class="k">${actual.toFixed(1)}s</span> against ${target.toFixed(1)}s (${err > 0 ? "+" : ""}${err.toFixed(1)}s). Press to try a new one.`;
+  }
+
+  function frame(t) {
+    if (!running) return; ctx.clearRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2;
+    const breath = 0.5 + 0.5 * Math.sin(t / 650);
+    const hue = phase === "holding" ? 42 : 14;
+    const r = (phase === "holding" ? 46 : 40) + breath * (phase === "holding" ? 12 : 8);
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r + 70);
+    g.addColorStop(0, `hsla(${hue},88%,64%,.4)`); g.addColorStop(1, `hsla(${hue},88%,64%,0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r + 70, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle = `hsla(${hue},88%,66%,.95)`; ctx.shadowColor = `hsla(${hue},88%,60%,.7)`; ctx.shadowBlur = 24;
+    ctx.arc(cx, cy, r, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+
+    if (phase === "result") {
+      const y = cy + 130, half = Math.min(W * 0.32, 260);
+      const scale = half / Math.max(target * 0.8, 2.2);
+      ctx.strokeStyle = "rgba(243,233,218,.22)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(cx - half, y); ctx.lineTo(cx + half, y); ctx.stroke();
+      ctx.strokeStyle = "rgba(243,233,218,.7)"; ctx.beginPath(); ctx.moveTo(cx, y - 12); ctx.lineTo(cx, y + 12); ctx.stroke();
+      const dx = clamp(err * scale, -half, half), good = Math.abs(err) <= 0.35;
+      ctx.strokeStyle = good ? "hsla(150,70%,60%,.95)" : "hsla(14,90%,64%,.95)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(cx + dx, y - 16); ctx.lineTo(cx + dx, y + 16); ctx.stroke();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointerdown", down);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  return {
+    enter() { resize(); running = true; pickTarget(); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); phase = "ready"; }
+  };
+})());
+
+/* ============================================================
+   TOY 05 — RECALL  (watch then reproduce; working memory)
+   ============================================================ */
+Router.register("recall", (() => {
+  const cv = document.getElementById("recall-cv");
+  const hintEl = document.getElementById("recall-hint");
+  const countEl = document.getElementById("recall-count");
+  const replayBtn = document.getElementById("recall-replay");
+  let ctx, W, H, raf = null, running = false;
+  let level = 3, seq = [], phase = "show", showStart = 0, litIndex = -1, playerIdx = 0, flash = null;
+  let startLevel = 3;
+  wireDial("recall-dial", 0, i => { startLevel = [3, 4, 5][i]; level = startLevel; if (running) newRound(); });
+  const STEP = 720;
+
+  function layout() {
+    const cols = 4, rows = 3, mx = W * 0.16, my = H * 0.26, gw = (W - mx * 2) / (cols - 1), gh = (H - my * 2) / (rows - 1);
+    const cells = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) cells.push({ x: mx + c * gw, y: my + r * gh });
+    for (let i = cells.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [cells[i], cells[j]] = [cells[j], cells[i]]; }
+    seq = cells.slice(0, level).map((p, i) => ({ x: p.x, y: p.y, hue: 200 + i * (150 / level) }));
+  }
+  function newRound() { layout(); phase = "show"; showStart = performance.now(); litIndex = -1; playerIdx = 0; flash = null; countEl.textContent = "level " + level; hintEl.innerHTML = "Watch the order&hellip;"; }
+  function replay() { if (phase === "input") { phase = "show"; showStart = performance.now(); litIndex = -1; playerIdx = 0; hintEl.innerHTML = "Watch the order&hellip;"; } }
+
+  function down(e) {
+    e.preventDefault(); audio();
+    if (phase === "show") return;
+    if (phase === "done") { newRound(); return; }
+    if (phase !== "input") return;
+    const p = pointerPos(cv, e);
+    let hit = -1, best = 1e9;
+    seq.forEach((s, i) => { const d = Math.hypot(p.x - s.x, p.y - s.y); if (d < 46 && d < best) { best = d; hit = i; } });
+    if (hit < 0) return;
+    if (hit === playerIdx) {
+      flash = { i: hit, ok: true, t: 1 }; tone(300 * Math.pow(1.12, hit), { dur: 0.4, type: "triangle", gain: 0.08 }); playerIdx++;
+      if (playerIdx >= seq.length) {
+        phase = "done"; level = Math.min(7, level + 1); countEl.textContent = "level " + level;
+        hintEl.innerHTML = "Held it. Press for the next round.";
+        tone(528, { dur: 0.7, type: "triangle", gain: 0.1 }); tone(792, { dur: 0.5, gain: 0.05, when: 0.06 });
+      }
+    } else {
+      flash = { i: hit, ok: false, t: 1 }; tone(180, { dur: 0.5, gain: 0.06 });
+      playerIdx = 0; hintEl.innerHTML = "Not that one. Watch again&hellip;";
+      phase = "show"; showStart = performance.now() + 350; litIndex = -1;
+    }
+  }
+
+  function frame(t) {
+    if (!running) return; ctx.clearRect(0, 0, W, H);
+    if (phase === "show") {
+      const el = t - showStart, idx = Math.floor(el / STEP);
+      if (idx !== litIndex && idx >= 0 && idx < seq.length) { litIndex = idx; tone(300 * Math.pow(1.12, idx), { dur: 0.4, type: "sine", gain: 0.08 }); }
+      if (el >= seq.length * STEP + 250) { phase = "input"; hintEl.innerHTML = 'Now <span class="k">tap</span> them back in order.'; }
+    }
+    seq.forEach((s, i) => {
+      let glow = 0.16, r = 13, hue = s.hue;
+      if (phase === "show" && i === litIndex) { glow = 1; r = 20; }
+      if (phase === "input" && i < playerIdx) { glow = 0.7; r = 15; }
+      if (phase === "done") { glow = 0.5; r = 15; }
+      if (flash && flash.i === i) { glow = Math.max(glow, flash.t); r = 16 + flash.t * 8; if (!flash.ok) hue = 0; }
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${hue},80%,64%,${0.35 + glow * 0.65})`;
+      ctx.shadowColor = `hsla(${hue},80%,60%,.8)`; ctx.shadowBlur = 8 + glow * 26;
+      ctx.arc(s.x, s.y, r, 0, TAU); ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+    if (flash) { flash.t -= 0.05; if (flash.t <= 0) flash = null; }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointercancel", () => {});
+  replayBtn.addEventListener("click", replay);
+  return {
+    enter() { resize(); running = true; newRound(); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); }
+  };
+})());
+
+/* ============================================================
+   TOY 06 — CONTINUE  (extend a hidden rule; pattern prediction)
+   ============================================================ */
+Router.register("continue", (() => {
+  const cv = document.getElementById("continue-cv");
+  const hintEl = document.getElementById("continue-hint");
+  const countEl = document.getElementById("continue-count");
+  const nextBtn = document.getElementById("continue-next");
+  let ctx, W, H, raf = null, running = false;
+  let phase = "draw", fn = null, splitX = 0, drawing = false, playerPts = [], reveal = 0;
+  let complexity = 1;
+  wireDial("continue-dial", 1, i => { complexity = i; if (running) makePattern(); });
+  const SHOWN = 0.5;
+
+  function makePattern() {
+    const ph = Math.random() * TAU, ph2 = Math.random() * TAU;
+    const slope = (Math.random() * 0.3 - 0.15) * (complexity === 0 ? 0.5 : 1);
+    const freq = [0.8 + Math.random() * 0.7, 1.2 + Math.random() * 1.9, 1.6 + Math.random() * 2.2][complexity];
+    const amp = [0.14 + Math.random() * 0.06, 0.16 + Math.random() * 0.12, 0.14 + Math.random() * 0.1][complexity];
+    const h2 = complexity === 2 ? 0.35 + Math.random() * 0.25 : 0;   // a second harmonic makes it trickier
+    fn = (u) => 0.5 + slope * (u - 0.5) + amp * Math.sin(ph + u * freq * TAU) + amp * h2 * Math.sin(ph2 + u * freq * 2 * TAU);
+    splitX = W * SHOWN; phase = "draw"; playerPts = []; reveal = 0;
+    countEl.innerHTML = "&mdash;";
+    hintEl.innerHTML = '<span class="k">Draw</span> the continuation from the marker to the right edge.';
+  }
+  function yAt(u) { return clamp(fn(u), 0.08, 0.92) * H; }
+
+  function down(e) { if (phase !== "draw") return; e.preventDefault(); const p = pointerPos(cv, e); if (p.x < splitX - 50) return; drawing = true; playerPts = [{ x: Math.max(splitX, p.x), y: p.y }]; }
+  function move(e) { if (!drawing) return; const p = pointerPos(cv, e), lp = playerPts[playerPts.length - 1]; if (p.x > lp.x + 4) playerPts.push({ x: p.x, y: p.y }); }
+  function up() { if (!drawing) return; drawing = false; if (playerPts.length >= 2 && playerPts[playerPts.length - 1].x > W * 0.82) score(); else hintEl.innerHTML = 'Draw all the way to the right edge. <span class="k">Try again.</span>'; }
+  function score() {
+    let err = 0, n = 0;
+    for (let x = splitX; x <= W; x += W / 60) {
+      const ty = yAt(x / W);
+      let py = null;
+      for (let i = 1; i < playerPts.length; i++) { const a = playerPts[i - 1], b = playerPts[i]; if (x >= a.x && x <= b.x) { const f = (x - a.x) / ((b.x - a.x) || 1); py = lerp(a.y, b.y, f); break; } }
+      if (py == null) py = playerPts[playerPts.length - 1].y;
+      err += Math.abs(py - ty); n++;
+    }
+    const acc = Math.round(clamp(1 - (err / Math.max(n, 1)) / (H * 0.28), 0, 1) * 100);
+    phase = "reveal"; reveal = 0; countEl.innerHTML = acc + '<small>% match</small>';
+    hintEl.innerHTML = acc >= 80 ? "Strong read. Press new pattern." : acc >= 55 ? "Close. Press new pattern." : "The rule fooled you. Press new pattern.";
+    tone(acc >= 80 ? 528 : acc >= 55 ? 396 : 264, { dur: 0.6, type: "triangle", gain: 0.09 });
+  }
+
+  function frame() {
+    if (!running) return; ctx.clearRect(0, 0, W, H);
+    if (!fn) makePattern();
+    ctx.strokeStyle = "hsla(255,90%,74%,.9)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+    ctx.shadowColor = "hsla(255,90%,70%,.6)"; ctx.shadowBlur = 10;
+    ctx.beginPath();
+    for (let x = 0; x <= splitX; x += W / 140) { const y = yAt(x / W); x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.stroke(); ctx.shadowBlur = 0;
+
+    ctx.strokeStyle = "rgba(243,233,218,.16)"; ctx.lineWidth = 1; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.moveTo(splitX, 0); ctx.lineTo(splitX, H); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.fillStyle = "hsla(255,90%,74%,1)"; ctx.shadowColor = "hsla(255,90%,70%,.8)"; ctx.shadowBlur = 12; ctx.arc(splitX, yAt(SHOWN), 5, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+
+    if (playerPts.length) {
+      ctx.strokeStyle = "hsla(42,95%,66%,.95)"; ctx.lineWidth = 3;
+      ctx.beginPath(); playerPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+    }
+    if (phase === "reveal") {
+      reveal = Math.min(1, reveal + 0.03);
+      ctx.strokeStyle = "hsla(150,70%,62%,.95)"; ctx.lineWidth = 3; ctx.setLineDash([2, 7]);
+      ctx.beginPath();
+      const endX = splitX + (W - splitX) * reveal;
+      for (let x = splitX; x <= endX; x += W / 140) { const y = yAt(x / W); x === splitX ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; splitX = W * SHOWN; }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  nextBtn.addEventListener("click", makePattern);
+  return {
+    enter() { resize(); running = true; makePattern(); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); drawing = false; }
+  };
+})());
+
+/* ============================================================
+   TOY 08 — AIM  (curve a seed to a target; mental simulation)
+   ============================================================ */
+Router.register("aim", (() => {
+  const cv = document.getElementById("aim-cv");
+  const hintEl = document.getElementById("aim-hint");
+  const countEl = document.getElementById("aim-count");
+  let ctx, W, H, raf = null, running = false;
+  let proj = null, target = null, aiming = false, aStart = null, aCur = null, hits = 0, burst = [];
+  let GM = 8200;
+  wireDial("aim-dial", 1, i => { GM = [4500, 8200, 13000][i]; });
+
+  function newTarget() { target = { x: W * (0.5 + Math.random() * 0.38), y: H * (0.2 + Math.random() * 0.6), r: 26 }; }
+  function down(e) { e.preventDefault(); audio(); aiming = true; aStart = pointerPos(cv, e); aCur = { ...aStart }; hintEl.style.opacity = ".35"; }
+  function move(e) { if (aiming) aCur = pointerPos(cv, e); }
+  function up() {
+    if (!aiming || !aStart) { aiming = false; return; }
+    const dx = aStart.x - aCur.x, dy = aStart.y - aCur.y;
+    proj = { x: aStart.x, y: aStart.y, vx: dx * 0.075, vy: dy * 0.075, trail: [] };
+    aiming = false; aStart = aCur = null;
+  }
+
+  function frame(t) {
+    if (!running) return;
+    ctx.fillStyle = "rgba(23,17,14,0.2)"; ctx.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H / 2;
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90);
+    core.addColorStop(0, "rgba(243,233,218,.06)"); core.addColorStop(1, "rgba(243,233,218,0)");
+    ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx, cy, 90, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle = "rgba(243,233,218,.5)"; ctx.arc(cx, cy, 4, 0, TAU); ctx.fill();
+
+    if (target) {
+      const pulse = 0.5 + 0.5 * Math.sin(t / 300);
+      ctx.strokeStyle = `hsla(168,80%,62%,${0.6 + pulse * 0.4})`; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(target.x, target.y, target.r, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = "hsla(168,80%,62%,.3)"; ctx.beginPath(); ctx.arc(target.x, target.y, target.r + 6 + pulse * 4, 0, TAU); ctx.stroke();
+    }
+    if (proj) {
+      const dx = cx - proj.x, dy = cy - proj.y, d2 = dx * dx + dy * dy + 400, d = Math.sqrt(d2), f = GM / d2;
+      proj.vx += (dx / d) * f * 0.06; proj.vy += (dy / d) * f * 0.06;
+      const sp = Math.hypot(proj.vx, proj.vy); if (sp > 16) { proj.vx = proj.vx / sp * 16; proj.vy = proj.vy / sp * 16; }
+      proj.x += proj.vx; proj.y += proj.vy;
+      proj.trail.push({ x: proj.x, y: proj.y }); if (proj.trail.length > 46) proj.trail.shift();
+      ctx.strokeStyle = "hsla(42,95%,66%,.5)"; ctx.lineWidth = 2;
+      ctx.beginPath(); proj.trail.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke();
+      ctx.beginPath(); ctx.fillStyle = "hsla(42,95%,68%,1)"; ctx.shadowColor = "hsla(42,95%,60%,.9)"; ctx.shadowBlur = 14; ctx.arc(proj.x, proj.y, 5, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+
+      if (target && Math.hypot(proj.x - target.x, proj.y - target.y) < target.r) {
+        hits++; countEl.innerHTML = hits + ' <small>hits</small>';
+        tone(528, { dur: 0.6, type: "triangle", gain: 0.1 }); tone(792, { dur: 0.4, gain: 0.05, when: 0.05 });
+        for (let i = 0; i < 26; i++) { const an = Math.random() * TAU, s = 1 + Math.random() * 3.2; burst.push({ x: target.x, y: target.y, vx: Math.cos(an) * s, vy: Math.sin(an) * s, life: 1 }); }
+        proj = null; newTarget();
+      } else if (proj && (proj.x < -50 || proj.x > W + 50 || proj.y < -50 || proj.y > H + 50)) {
+        proj = null;
+      }
+    }
+    burst = burst.filter(b => b.life > 0);
+    burst.forEach(b => { b.x += b.vx; b.y += b.vy; b.vx *= 0.96; b.vy *= 0.96; b.life -= 0.02; ctx.beginPath(); ctx.fillStyle = `hsla(168,80%,64%,${b.life})`; ctx.arc(b.x, b.y, 2.5, 0, TAU); ctx.fill(); });
+
+    if (aiming && aStart && aCur) {
+      const dx = aStart.x - aCur.x, dy = aStart.y - aCur.y, power = clamp(Math.hypot(dx, dy) / 240, 0, 1);
+      ctx.setLineDash([4, 6]); ctx.strokeStyle = "rgba(243,233,218,.25)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(aStart.x, aStart.y); ctx.lineTo(aCur.x, aCur.y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.strokeStyle = "hsla(42,95%,66%,.9)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(aStart.x, aStart.y); ctx.lineTo(aStart.x + dx, aStart.y + dy); ctx.stroke();
+      ctx.beginPath(); ctx.fillStyle = "hsla(42,95%,68%,1)"; ctx.arc(aStart.x, aStart.y, 4 + power * 4, 0, TAU); ctx.fill();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  return {
+    enter() { resize(); running = true; if (!target) newTarget(); ctx.clearRect(0, 0, W, H); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); aiming = false; proj = null; }
+  };
+})());
+
+/* ============================================================
+   TOY 09 — TINKER  (change one rule to reach a goal; causal reasoning)
+   ============================================================ */
+Router.register("tinker", (() => {
+  const cv = document.getElementById("tinker-cv");
+  const hintEl = document.getElementById("tinker-hint");
+  const countEl = document.getElementById("tinker-count");
+  const modeBtn = document.getElementById("tinker-mode");
+  const strBtn = document.getElementById("tinker-strength");
+  let ctx, W, H, raf = null, running = false;
+  let seeds = [], mode = "repel", strong = false, goal = "gather", solved = 0, progress = 0;
+  let partCount = 9;
+  wireDial("tinker-dial", 1, i => { partCount = [6, 9, 12][i]; if (running) seed(); });
+  const HUES = [168, 260, 12, 42, 320];
+
+  function seed() { seeds = []; for (let i = 0; i < partCount; i++) { const a = (i / partCount) * TAU; seeds.push({ x: W / 2 + Math.cos(a) * 90, y: H / 2 + Math.sin(a) * 90, vx: 0, vy: 0, hue: HUES[i % 5] }); } }
+  function setGoal(g) { goal = g; hintEl.innerHTML = `Goal: make the seeds <span class="k">${g}</span>. Change one rule until they do.`; }
+
+  function step() {
+    const cx = W / 2, cy = H / 2, sign = mode === "attract" ? 1 : -1, mag = (strong ? 2.3 : 1) * (mode === "attract" ? 16 : 22);
+    for (let i = 0; i < seeds.length; i++) {
+      const s = seeds[i];
+      let ax = (cx - s.x) * 0.0006, ay = (cy - s.y) * 0.0006;
+      for (let j = 0; j < seeds.length; j++) {
+        if (i === j) continue;
+        const o = seeds[j], dx = o.x - s.x, dy = o.y - s.y, d2 = dx * dx + dy * dy + 80, d = Math.sqrt(d2), f = sign * mag / d2;
+        ax += (dx / d) * f; ay += (dy / d) * f;
+        if (d < 24) { ax -= (dx / d) * 300 / d2; ay -= (dy / d) * 300 / d2; }
+      }
+      s.vx = (s.vx + ax) * 0.94; s.vy = (s.vy + ay) * 0.94;
+      const sp = Math.hypot(s.vx, s.vy); if (sp > 7) { s.vx = s.vx / sp * 7; s.vy = s.vy / sp * 7; }
+      s.x += s.vx; s.y += s.vy;
+      const pad = 10;
+      if (s.x < pad) { s.x = pad; s.vx *= -0.5; } if (s.x > W - pad) { s.x = W - pad; s.vx *= -0.5; }
+      if (s.y < pad) { s.y = pad; s.vy *= -0.5; } if (s.y > H - pad) { s.y = H - pad; s.vy *= -0.5; }
+    }
+  }
+  function spread() { let mx = 0, my = 0; seeds.forEach(s => { mx += s.x; my += s.y; }); mx /= seeds.length; my /= seeds.length; let d = 0; seeds.forEach(s => d += Math.hypot(s.x - mx, s.y - my)); return d / seeds.length; }
+
+  function frame() {
+    if (!running) return;
+    ctx.fillStyle = "rgba(23,17,14,0.22)"; ctx.fillRect(0, 0, W, H);
+    step();
+    const sp = spread(), ref = Math.min(W, H);
+    const meeting = goal === "gather" ? sp < ref * 0.12 : sp > ref * 0.34;
+    progress = meeting ? Math.min(1, progress + 1 / 90) : Math.max(0, progress - 1 / 45);
+    if (progress >= 1) {
+      solved++; countEl.innerHTML = solved + ' <small>solved</small>'; progress = 0;
+      tone(528, { dur: 0.7, type: "triangle", gain: 0.1 }); tone(792, { dur: 0.5, gain: 0.05, when: 0.06 });
+      setGoal(goal === "gather" ? "scatter" : "gather");
+    }
+    for (let i = 0; i < seeds.length; i++) for (let j = i + 1; j < seeds.length; j++) {
+      const a = seeds[i], b = seeds[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < 150) { ctx.strokeStyle = `hsla(${(a.hue + b.hue) / 2},70%,66%,${(1 - d / 150) * 0.45})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+    }
+    seeds.forEach(s => { ctx.beginPath(); ctx.fillStyle = `hsla(${s.hue},85%,66%,1)`; ctx.shadowColor = `hsla(${s.hue},90%,60%,.9)`; ctx.shadowBlur = 14; ctx.arc(s.x, s.y, 4.5, 0, TAU); ctx.fill(); });
+    ctx.shadowBlur = 0;
+    if (progress > 0) { const y = H - 44; ctx.strokeStyle = "hsla(150,70%,60%,.9)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(W / 2, y, 14, -Math.PI / 2, -Math.PI / 2 + progress * TAU); ctx.stroke(); }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  modeBtn.addEventListener("click", () => { mode = mode === "attract" ? "repel" : "attract"; modeBtn.textContent = "force: " + mode; audio(); });
+  strBtn.addEventListener("click", () => { strong = !strong; strBtn.textContent = "pull: " + (strong ? "strong" : "gentle"); audio(); });
+  cv.addEventListener("pointerdown", () => audio());
+  return {
+    enter() {
+      resize(); running = true; seed(); mode = "repel"; strong = false; progress = 0;
+      modeBtn.textContent = "force: repel"; strBtn.textContent = "pull: gentle"; setGoal("gather");
+      ctx.clearRect(0, 0, W, H); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame);
+    },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); }
+  };
+})());
+
+/* ============================================================
+   TOY 10 — FOLLOW  (track a wandering light; visual tracking)
+   ============================================================ */
+Router.register("follow", (() => {
+  const cv = document.getElementById("follow-cv");
+  const hintEl = document.getElementById("follow-hint");
+  const countEl = document.getElementById("follow-count");
+  let ctx, W, H, raf = null, running = false, last = 0;
+  let pointer = null, streak = 0, best = 0, elapsed = 0, speedMul = 1.1, prevOnT = false;
+  wireDial("follow-dial", 1, i => { speedMul = [0.7, 1.1, 1.6][i]; });
+
+  function orbPos(t) {
+    const s = speedMul * (1 + Math.min(elapsed, 30) * 0.02);   // drifts faster the longer you hold on
+    const cx = W / 2, cy = H / 2, ax = W * 0.34, ay = H * 0.30;
+    return {
+      x: cx + ax * Math.sin(t * 0.00042 * s) * Math.cos(t * 0.00027 * s + 1.3),
+      y: cy + ay * Math.sin(t * 0.00061 * s + 0.7) * Math.cos(t * 0.00019 * s)
+    };
+  }
+  function move(e) { pointer = pointerPos(cv, e); }
+  function down(e) { e.preventDefault(); audio(); pointer = pointerPos(cv, e); hintEl.style.opacity = ".35"; }
+
+  function frame(t) {
+    if (!running) return;
+    const dt = Math.min(0.05, (t - last) / 1000 || 0.016); last = t;
+    elapsed += dt;
+    ctx.clearRect(0, 0, W, H);
+    const orb = orbPos(t), R = 46;
+    const onT = pointer && Math.hypot(pointer.x - orb.x, pointer.y - orb.y) < R;
+    if (onT && !prevOnT) tone(440, { dur: 0.14, gain: 0.04 });
+    prevOnT = onT;
+    if (onT) { streak += dt; if (streak > best) { best = streak; countEl.innerHTML = best.toFixed(1) + 's <small>best</small>'; } }
+    else streak = 0;
+
+    ctx.strokeStyle = `hsla(330,85%,68%,${onT ? 0.5 : 0.22})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(orb.x, orb.y, R, 0, TAU); ctx.stroke();
+    const g = ctx.createRadialGradient(orb.x, orb.y, 0, orb.x, orb.y, 40 + (onT ? 30 : 0));
+    g.addColorStop(0, `hsla(330,90%,66%,${onT ? 0.7 : 0.4})`); g.addColorStop(1, "hsla(330,90%,66%,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(orb.x, orb.y, 40 + (onT ? 30 : 0), 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.fillStyle = "hsla(330,90%,72%,1)"; ctx.shadowColor = "hsla(330,90%,62%,.9)";
+    ctx.shadowBlur = onT ? 26 : 14; ctx.arc(orb.x, orb.y, onT ? 11 : 8, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
+    if (streak > 0) {
+      ctx.strokeStyle = "hsla(150,70%,62%,.9)"; ctx.lineWidth = 3; ctx.lineCap = "round";
+      ctx.beginPath(); ctx.arc(orb.x, orb.y, R + 6, -Math.PI / 2, -Math.PI / 2 + Math.min(streak / 5, 1) * TAU); ctx.stroke();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointermove", move);
+  cv.addEventListener("pointerdown", down);
+  return {
+    enter() { resize(); running = true; last = performance.now(); elapsed = 0; streak = 0; pointer = null; prevOnT = false;
+      countEl.innerHTML = best.toFixed(1) + 's <small>best</small>';
+      window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); hintEl.style.opacity = ""; }
+  };
+})());
+
+/* ============================================================
+   TOY 11 — FOG  (wipe to find a hidden light; visual search)
+   ============================================================ */
+Router.register("fog", (() => {
+  const cv = document.getElementById("fog-cv");
+  const hintEl = document.getElementById("fog-hint");
+  const countEl = document.getElementById("fog-count");
+  let ctx, W, H, raf = null, running = false, dpr = 1;
+  let fog = null, fogCtx = null, target = null, wiping = false, lastP = null, found = 0, cleared = 0, reach = 40, revealT = 0;
+  wireDial("fog-dial", 1, i => { reach = [26, 40, 58][i]; });
+
+  function refog() {
+    fogCtx.setTransform(1, 0, 0, 1, 0, 0);
+    fogCtx.globalCompositeOperation = "source-over";
+    fogCtx.clearRect(0, 0, fog.width, fog.height);
+    fogCtx.fillStyle = "#3a2a1d";
+    fogCtx.fillRect(0, 0, fog.width, fog.height);
+    cleared = 0;
+  }
+  function makeFog() {
+    fog = document.createElement("canvas");
+    fog.width = Math.max(1, Math.round(W * dpr)); fog.height = Math.max(1, Math.round(H * dpr));
+    fogCtx = fog.getContext("2d");
+    refog();
+  }
+  function newTarget() {
+    const m = 0.16;
+    target = { x: W * (m + Math.random() * (1 - 2 * m)), y: H * (0.28 + Math.random() * 0.58), r: 20, hue: 200 + Math.random() * 150 };
+    refog();
+  }
+  function wipeAt(x, y) {
+    fogCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fogCtx.globalCompositeOperation = "destination-out";
+    const g = fogCtx.createRadialGradient(x, y, 0, x, y, reach);
+    g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.65, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    fogCtx.fillStyle = g; fogCtx.beginPath(); fogCtx.arc(x, y, reach, 0, TAU); fogCtx.fill();
+    cleared += Math.PI * reach * reach;
+  }
+  function checkFound() {
+    if (revealT > 0 || !target || !fogCtx) return;
+    const img = fogCtx.getImageData(Math.round(target.x * dpr) - 2, Math.round(target.y * dpr) - 2, 4, 4).data;
+    let a = 0, n = 0; for (let i = 3; i < img.length; i += 4) { a += img[i]; n++; }
+    a /= n || 1;
+    if (a < 40) {
+      found++; countEl.innerHTML = found + ' <small>found</small>';
+      const pct = Math.round(clamp(cleared / (W * H), 0, 1) * 100);
+      hintEl.innerHTML = `Found it after clearing about <span class="k">${pct}%</span>. Another light is hidden.`;
+      revealT = 1.1; tone(528, { dur: 0.6, type: "triangle", gain: 0.1 }); tone(792, { dur: 0.4, gain: 0.05, when: 0.05 });
+    }
+  }
+  function down(e) { e.preventDefault(); audio(); wiping = true; const p = pointerPos(cv, e); lastP = p; wipeAt(p.x, p.y); checkFound(); hintEl.style.opacity = ".35"; }
+  function move(e) {
+    if (!wiping) return;
+    const p = pointerPos(cv, e);
+    if (lastP) { const d = Math.hypot(p.x - lastP.x, p.y - lastP.y), steps = Math.max(1, Math.floor(d / (reach * 0.5)));
+      for (let i = 1; i <= steps; i++) wipeAt(lerp(lastP.x, p.x, i / steps), lerp(lastP.y, p.y, i / steps)); }
+    lastP = p; checkFound();
+  }
+  function up() { wiping = false; lastP = null; }
+
+  function frame() {
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+    if (target) {
+      const gg = ctx.createRadialGradient(target.x, target.y, 0, target.x, target.y, target.r * 2.4);
+      gg.addColorStop(0, `hsla(${target.hue},85%,66%,1)`); gg.addColorStop(1, `hsla(${target.hue},85%,66%,0)`);
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(target.x, target.y, target.r * 2.4, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.fillStyle = `hsla(${target.hue},85%,72%,1)`; ctx.arc(target.x, target.y, target.r, 0, TAU); ctx.fill();
+    }
+    if (fog) ctx.drawImage(fog, 0, 0, W, H);
+    if (revealT > 0) { revealT -= 1 / 60; if (revealT <= 0) { newTarget(); hintEl.style.opacity = ""; } }
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() {
+    const r = fit(cv); ctx = r.ctx;
+    const nd = Math.min(window.devicePixelRatio || 1, 2);
+    if (fog && r.w === W && r.h === H && nd === dpr) return; // no real size change: keep the wiping
+    W = r.w; H = r.h; dpr = nd;
+    makeFog(); if (!target) newTarget(); else refog();
+  }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  return {
+    enter() { running = true; resize(); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); wiping = false; }
+  };
+})());
+
+/* ============================================================
+   TOY 12 — TURN  (rotate to match a silhouette; mental rotation)
+   ============================================================ */
+Router.register("turn", (() => {
+  const cv = document.getElementById("turn-cv");
+  const hintEl = document.getElementById("turn-hint");
+  const countEl = document.getElementById("turn-count");
+  let ctx, W, H, raf = null, running = false;
+  let pts = [], angle = 0, targetAng = 0, dragging = false, lastPA = 0, matched = 0, hue = 320, ptCount = 5, snapT = 0;
+  wireDial("turn-dial", 1, i => { ptCount = [4, 5, 6][i]; if (running) newShape(); });
+
+  function newShape() {
+    pts = []; let a = 0;
+    for (let i = 0; i < ptCount; i++) {
+      a += 0.5 + Math.random() * 1.5;                 // uneven steps make orientation matter
+      const r = 42 + Math.random() * 66;
+      pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
+    }
+    targetAng = Math.random() * TAU;
+    angle = targetAng + Math.PI * 0.5 + Math.random() * Math.PI;   // start away from the answer
+    hue = 300 + Math.random() * 60; snapT = 0;
+    hintEl.style.opacity = "";
+  }
+  function angDiff(x, y) { let d = (x - y) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; }
+  function pAng(p) { return Math.atan2(p.y - H / 2, p.x - W / 2); }
+
+  function down(e) { e.preventDefault(); audio(); dragging = true; lastPA = pAng(pointerPos(cv, e)); hintEl.style.opacity = ".35"; }
+  function move(e) { if (!dragging) return; const a = pAng(pointerPos(cv, e)); angle += angDiff(a, lastPA); lastPA = a; }
+  function up() {
+    if (!dragging) return; dragging = false;
+    if (Math.abs(angDiff(angle, targetAng)) < 0.14) {          // within ~8 degrees
+      angle = targetAng; snapT = 1; matched++; countEl.innerHTML = matched + ' <small>matched</small>';
+      tone(528, { dur: 0.5, type: "triangle", gain: 0.1 }); tone(792, { dur: 0.4, gain: 0.05, when: 0.05 });
+      setTimeout(() => { if (running) newShape(); }, 640);
+    }
+  }
+  function drawShape(rot, dot) {
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(rot);
+    ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.closePath(); ctx.stroke();
+    pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, dot, 0, TAU); ctx.fill(); });
+    ctx.restore();
+  }
+  function frame() {
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+    const near = 1 - clamp(Math.abs(angDiff(angle, targetAng)) / 1.2, 0, 1);
+    ctx.strokeStyle = "rgba(243,233,218,.2)"; ctx.lineWidth = 2; ctx.fillStyle = "rgba(243,233,218,.26)";
+    drawShape(targetAng, 4);
+    ctx.strokeStyle = `hsla(${hue},85%,68%,${0.7 + near * 0.3})`; ctx.lineWidth = 2.5 + snapT * 2;
+    ctx.fillStyle = `hsla(${hue},85%,70%,1)`;
+    ctx.shadowColor = `hsla(${hue},85%,62%,${0.5 + near * 0.5})`; ctx.shadowBlur = 10 + near * 20 + snapT * 34;
+    drawShape(angle, 5 + snapT * 3);
+    ctx.shadowBlur = 0;
+    if (snapT > 0) snapT -= 1 / 40;
+    raf = requestAnimationFrame(frame);
+  }
+  function resize() { const r = fit(cv); ctx = r.ctx; W = r.w; H = r.h; }
+  cv.addEventListener("pointerdown", down);
+  cv.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  return {
+    enter() { resize(); running = true; newShape(); window.addEventListener("resize", resize); raf = requestAnimationFrame(frame); },
+    leave() { running = false; if (raf) cancelAnimationFrame(raf); window.removeEventListener("resize", resize); dragging = false; }
+  };
+})());
+</script>

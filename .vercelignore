@@ -1,0 +1,3 @@
+# Keep internal docs out of the public deploy.
+# The play toy itself is index.html plus assets/.
+*.md
