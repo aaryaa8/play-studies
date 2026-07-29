@@ -4,9 +4,9 @@
 
 Open it cold, pick a card, and press, drag, or let go. The label under each card names the cognitive skill it exercises.
 
-**Live:** https://03-play-toy.vercel.app  ·  **Source:** github.com/aaryaa8/play-studies (private)
+**Live:** https://play-studies.vercel.app  ·  **Source:** github.com/aaryaa8/play-studies (private)
 
-Redeploy after changes with `npx vercel@latest deploy --prod --yes` from this folder. Media for the portfolio page lives at stable URLs like `https://03-play-toy.vercel.app/assets/gifs/turn.mp4`, and `assets/embed-snippet.html` is a ready-to-paste WordPress block that uses them.
+Redeploy after changes with `npx vercel@latest deploy --prod --yes` from this folder. Media for the portfolio page lives at stable URLs like `https://play-studies.vercel.app/assets/gifs/turn.mp4`, and `assets/embed-snippet.html` is a ready-to-paste WordPress block that uses them.
 
 ---
 
