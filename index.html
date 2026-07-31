@@ -348,12 +348,67 @@
   #view-garden, #view-aim,   #view-tinker { --tint: var(--jade);  }
   #view-follow, #view-fog,   #view-turn   { --tint: var(--rose);  }
 
+  /* ---------- FTUE: first-run gesture coach ---------- */
+  .coach {
+    position: fixed; left: 50%; top: 52%; transform: translate(-50%, -50%);
+    z-index: 22; pointer-events: none; text-align: center;
+    opacity: 0; visibility: hidden; transition: opacity .55s ease, visibility .55s ease;
+  }
+  .coach.show { opacity: 1; visibility: visible; }
+  .coach-label {
+    margin-top: 22px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+  }
+  .coach-glyph { position: relative; width: 120px; height: 120px; margin: 0 auto; color: var(--tint, var(--coral)); }
+  .coach-glyph .cg-dot {
+    position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px;
+    border-radius: 50%; background: currentColor; box-shadow: 0 0 20px 4px currentColor;
+  }
+  /* hold */
+  .coach-glyph[data-g="hold"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: 60px; height: 60px; margin: -30px; border-radius: 50%; border: 2px solid currentColor; animation: cgHold 1.8s ease-in-out infinite; }
+  @keyframes cgHold { 0%,100% { transform: scale(1.6); opacity: .2; } 50% { transform: scale(.9); opacity: .85; } }
+  /* drag + wipe (dot travels a line) */
+  .coach-glyph[data-g="drag"]::before { content: ""; position: absolute; left: 14px; right: 14px; top: 50%; border-top: 2px dashed currentColor; opacity: .4; }
+  .coach-glyph[data-g="wipe"]::before { content: ""; position: absolute; left: 12px; right: 12px; top: 50%; height: 12px; margin-top: -6px; border-radius: 6px; background: currentColor; opacity: .16; }
+  .coach-glyph[data-g="drag"] .cg-dot, .coach-glyph[data-g="wipe"] .cg-dot { left: 16px; top: 50%; margin-top: -8px; animation: cgDrag 1.9s ease-in-out infinite; }
+  @keyframes cgDrag { 0%,100% { transform: translateX(0); } 50% { transform: translateX(74px); } }
+  /* sling */
+  .coach-glyph[data-g="sling"] .cg-dot { animation: cgSling 2s ease-in-out infinite; }
+  @keyframes cgSling { 0% { transform: translate(6px,-4px); } 35%,48% { transform: translate(-24px,16px); } 100% { transform: translate(40px,-28px); } }
+  /* tap (three dots) */
+  .coach-glyph[data-g="tap"] .cg-dot { left: 28px; top: 50%; margin: -8px 0 0 -8px; animation: cgBlink 1.5s infinite; }
+  .coach-glyph[data-g="tap"]::before, .coach-glyph[data-g="tap"]::after { content: ""; position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 16px 3px currentColor; }
+  .coach-glyph[data-g="tap"]::before { left: 60px; animation: cgBlink 1.5s .25s infinite; }
+  .coach-glyph[data-g="tap"]::after { left: 92px; animation: cgBlink 1.5s .5s infinite; }
+  @keyframes cgBlink { 0%,60%,100% { opacity: .22; transform: scale(.8); } 20% { opacity: 1; transform: scale(1.2); } }
+  /* rotate */
+  .coach-glyph[data-g="rotate"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: 68px; height: 68px; margin: -34px; border-radius: 50%; border: 2px dashed currentColor; opacity: .3; }
+  .coach-glyph[data-g="rotate"] .cg-dot { animation: cgOrbit 2s linear infinite; }
+  @keyframes cgOrbit { from { transform: rotate(0) translateX(34px) rotate(0); } to { transform: rotate(360deg) translateX(34px) rotate(-360deg); } }
+  /* track (dot wanders, ring follows) */
+  .coach-glyph[data-g="track"] .cg-dot { animation: cgTrack 3s ease-in-out infinite; }
+  .coach-glyph[data-g="track"]::before { content: ""; position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px; border-radius: 50%; border: 2px solid currentColor; opacity: .45; animation: cgTrackRing 3s ease-in-out infinite; }
+  @keyframes cgTrack { 0%,100% { transform: translate(-30px,-14px); } 25% { transform: translate(24px,10px); } 50% { transform: translate(-16px,20px); } 75% { transform: translate(28px,-18px); } }
+  @keyframes cgTrackRing { 0%,100% { transform: translate(-30px,-14px); } 30% { transform: translate(24px,10px); } 55% { transform: translate(-16px,20px); } 80% { transform: translate(28px,-18px); } }
+
+  /* ---------- FTUE: hub progress + "keep going" ---------- */
+  .card.played .num::after { content: " \2713"; color: var(--accent); font-weight: 700; letter-spacing: 0; }
+  .card.justplayed { animation: cardPulse 1.3s ease; }
+  @keyframes cardPulse { 0% { border-color: var(--accent); box-shadow: 0 0 26px -6px var(--accent); } 100% { border-color: var(--faint); box-shadow: none; } }
+
   @media (prefers-reduced-motion: reduce) {
     .reveal, .pv-dot, .pv-wave .head, .pv-orbit span { animation: none; opacity: 1; transform: none; }
+    .coach-glyph .cg-dot, .coach-glyph::before, .coach-glyph::after { animation: none !important; }
+    .card.justplayed { animation: none; }
   }
 </style>
 
 <div class="grain"></div>
+
+<!-- first-run gesture coach (decorative; the toy hint carries the accessible text) -->
+<div class="coach" id="coach" aria-hidden="true">
+  <div class="coach-glyph"><i class="cg-dot"></i></div>
+  <div class="coach-label"></div>
+</div>
 
 <header class="topbar">
   <button class="back" id="backBtn">&larr; all toys</button>
@@ -903,6 +958,65 @@ function tone(freq, { dur = 0.5, type = "sine", gain = 0.14, when = 0 } = {}) {
 /* ============================================================
    ROUTER
    ============================================================ */
+/* ============================================================
+   FTUE — first-run gesture coaching + progress ("keep going")
+   A user-centric layer: show the gesture the first time you enter a
+   toy, dismiss it the instant you act, and track what you have played.
+   ============================================================ */
+const FTUE = (() => {
+  const COACH = {
+    bloom: { g: "hold", t: "press and hold" }, steady: { g: "hold", t: "hold still" }, count: { g: "hold", t: "hold, release on time" },
+    echo: { g: "drag", t: "drag to draw" }, recall: { g: "tap", t: "watch, then tap back" }, continue: { g: "drag", t: "draw the rest" },
+    garden: { g: "sling", t: "drag back, then let go" }, aim: { g: "sling", t: "drag to aim, then let go" }, tinker: { g: "tap", t: "flip a rule below" },
+    follow: { g: "track", t: "stay on the light" }, fog: { g: "wipe", t: "wipe to reveal" }, turn: { g: "rotate", t: "drag to rotate" }
+  };
+  const get = (k) => { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; } };
+  const add = (k, v) => { try { const a = new Set(get(k)); a.add(v); localStorage.setItem(k, JSON.stringify([...a])); } catch (e) {} };
+  const seen = new Set(get("ps-seen"));
+  const played = new Set(get("ps-played"));
+  let justPlayed = null, timer = null, shownAt = 0;
+  const TINT = { bloom: "#ff6a4d", steady: "#ff6a4d", count: "#ff6a4d", echo: "#8e86ff", recall: "#8e86ff", continue: "#8e86ff", garden: "#59d6b0", aim: "#59d6b0", tinker: "#59d6b0", follow: "#ff7fb2", fog: "#ff7fb2", turn: "#ff7fb2" };
+  const el = () => document.getElementById("coach");
+
+  function coach(view) {
+    const c = COACH[view], co = el();
+    if (!c || !co || seen.has(view)) return;
+    const gl = co.querySelector(".coach-glyph");
+    gl.dataset.g = c.g; gl.style.color = TINT[view] || "#ff6a4d";
+    co.querySelector(".coach-label").textContent = c.t;
+    co.classList.add("show"); shownAt = Date.now();
+    seen.add(view); add("ps-seen", view);
+    clearTimeout(timer); timer = setTimeout(hideCoach, 6500);
+  }
+  function hideCoach() { const co = el(); if (co) co.classList.remove("show"); clearTimeout(timer); }
+  function interact(view, dismiss) {
+    const co = el();
+    // dismiss only on the deliberate gesture, and not on the very first entry frame
+    if (dismiss && co && co.classList.contains("show") && Date.now() - shownAt > 250) hideCoach();
+    if (!played.has(view)) { played.add(view); add("ps-played", view); justPlayed = view; }
+  }
+  function hub() {
+    document.querySelectorAll(".card").forEach(card => {
+      card.classList.toggle("played", played.has(card.dataset.toy));
+      card.classList.toggle("justplayed", card.dataset.toy === justPlayed);
+    });
+    if (justPlayed) {
+      const jp = justPlayed; justPlayed = null;
+      setTimeout(() => { const c = document.querySelector('.card[data-toy="' + jp + '"]'); if (c) c.classList.remove("justplayed"); }, 1400);
+    }
+    if (played.size > 0) document.getElementById("context").textContent = played.size + " of 12 played";
+  }
+  // dismiss the coach and record play on first real interaction with a toy stage
+  Object.keys(COACH).forEach(v => {
+    const stage = document.querySelector("#view-" + v + " .stage");
+    if (stage) {
+      stage.addEventListener("pointerdown", () => interact(v, true), { passive: true });
+      stage.addEventListener("pointermove", () => interact(v, v === "follow"), { passive: true });
+    }
+  });
+  return { coach, hideCoach, hub };
+})();
+
 const Router = (() => {
   const toys = {};
   let current = "hub";
@@ -924,9 +1038,11 @@ const Router = (() => {
     };
     document.getElementById("context").textContent = labels[view] || "play studies";
 
+    if (view === "hub") { FTUE.hideCoach(); FTUE.hub(); }
     if (view !== "hub" && toys[view]) {
       // let layout settle before measuring the canvas
       requestAnimationFrame(() => requestAnimationFrame(() => toys[view].enter()));
+      FTUE.coach(view);
     }
   }
 
@@ -944,6 +1060,7 @@ document.getElementById("backBtn").addEventListener("click", () => Router.show("
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && Router.current !== "hub") Router.show("hub");
 });
+FTUE.hub(); // reflect any prior progress on first load
 
 /* ---------- global sound toggle ---------- */
 (() => {
