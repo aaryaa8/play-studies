@@ -12,7 +12,7 @@ Redeploy after changes with `npx vercel@latest deploy --prod --yes` from this fo
 
 ## What it is
 
-One self-contained page with a hub and twelve toys behind it. The toys are grouped into four families: three by their core gesture (Hold, Draw, Let go) and one about perception (Look). Each toy is one screen, one interaction, tuned to a real cognitive action. The thesis sits at the top: some skills are better played than taught.
+One self-contained page with a hub and twelve toys behind it. The toys are grouped into four families: three by their core gesture (Hold, Draw, Let go) and one about perception (Look). Each toy is one screen, one interaction, tuned to a real cognitive action. A calm dark theme is the default, and a top-bar toggle switches to a warm light theme for brighter rooms or lower light sensitivity. The choice is remembered between visits.
 
 | # | Family | Toy | Interaction | Cognitive skill |
 |---|--------|-----|-------------|-----------------|
